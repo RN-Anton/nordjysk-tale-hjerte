@@ -1,0 +1,9 @@
+services:
+  tts-frontend:
+    build:
+      context: .
+      args:
+        - VITE_API_BASE_URL=http://your-backend-ip:8000
+        - VITE_API_KEY=your-secure-key
+    ports:
+      - "80:80"
