@@ -1,5 +1,6 @@
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || "";
-const API_KEY = import.meta.env.VITE_API_KEY || "";
+import { API_BASE_URL, API_KEY } from "../config/config";
+
+const BASE_URL = API_BASE_URL;
 
 const headers = () => ({
   "X-API-Key": API_KEY,
