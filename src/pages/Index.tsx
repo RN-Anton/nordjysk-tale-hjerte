@@ -20,6 +20,7 @@ import {
   type Language,
 } from "@/lib/api";
 import VoiceUploadModal from "@/components/VoiceUploadModal";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { Volume2, Download, Upload, Loader2 } from "lucide-react";
 
 const Index = () => {
@@ -135,6 +136,7 @@ const Index = () => {
       {/* Header */}
       <header className="border-b bg-primary text-primary-foreground">
         <div className="mx-auto flex max-w-3xl items-center gap-4 px-6 py-4">
+          <ThemeToggle />
           <div className="flex h-10 w-10 items-center justify-center rounded bg-primary-foreground/20 text-sm font-bold">
             RN
           </div>
