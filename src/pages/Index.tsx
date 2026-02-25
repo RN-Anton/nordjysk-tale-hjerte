@@ -33,7 +33,7 @@ const Index = () => {
   // Form state with defaults
   const [text, setText] = useState("");
   const [voice, setVoice] = useState("danish_voice");
-  const [language, setLanguage] = useState("");
+  const [language, setLanguage] = useState("da");
   const [format, setFormat] = useState("wav");
   const [textError, setTextError] = useState("");
 
