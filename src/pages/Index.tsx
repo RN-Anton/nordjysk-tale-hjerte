@@ -21,7 +21,13 @@ import {
 } from "@/lib/api";
 import VoiceUploadModal from "@/components/VoiceUploadModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Volume2, Download, Upload, Loader2 } from "lucide-react";
+import { Volume2, Download, Upload, Loader2, ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Index = () => {
   const { toast } = useToast();
@@ -45,6 +51,8 @@ const Index = () => {
   const [progress, setProgress] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioBlobRef = useRef<Blob | null>(null);
+
+  const [downloadFormat, setDownloadFormat] = useState("wav");
 
   // Modal
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -71,7 +79,8 @@ const Index = () => {
     fetchLanguages()
       .then((l) => {
         setLanguages(l);
-        setLanguage(l[0]?.id ?? "");
+        const danish = l.find((lang) => lang.id === "da");
+        setLanguage(danish?.id ?? l[0]?.id ?? "");
         setLanguagesError("");
       })
       .catch((err) => {
@@ -130,13 +139,19 @@ const Index = () => {
     if (!audioUrl) return;
     const a = document.createElement("a");
     a.href = audioUrl;
-    a.download = `tale.wav`;
+    a.download = `tale.${downloadFormat}`;
     a.click();
   };
 
-  const refreshVoices = () => {
+  const refreshVoices = (voiceName?: string) => {
     fetchVoices()
-      .then(setVoices)
+      .then((v) => {
+        setVoices(v);
+        if (voiceName) {
+          const match = v.find((voice) => voice.name === voiceName);
+          if (match) setVoice(match.id);
+        }
+      })
       .catch(() => {});
   };
 
@@ -273,10 +288,26 @@ const Index = () => {
               <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
                 <p className="text-sm font-medium">Din lydfil er klar:</p>
                 <audio controls src={audioUrl} className="w-full" />
-                <Button variant="outline" onClick={handleDownload}>
-                  <Download className="mr-2 h-4 w-4" />
-                  Download lydfil
-                </Button>
+                <div className="flex items-center gap-0">
+                  <Button variant="outline" onClick={handleDownload} className="rounded-r-none">
+                    <Download className="mr-2 h-4 w-4" />
+                    Download .{downloadFormat}
+                  </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="outline" className="rounded-l-none border-l-0 px-2">
+                        <ChevronDown className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      {["wav", "mp3", "au"].map((fmt) => (
+                        <DropdownMenuItem key={fmt} onClick={() => setDownloadFormat(fmt)}>
+                          .{fmt} {fmt === downloadFormat && "✓"}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
             )}
           </CardContent>
