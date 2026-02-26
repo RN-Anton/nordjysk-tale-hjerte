@@ -25,7 +25,7 @@ interface Props {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   languages: Language[];
-  onSuccess: () => void;
+  onSuccess: (voiceName: string) => void;
 }
 
 export default function VoiceUploadModal({
@@ -36,7 +36,7 @@ export default function VoiceUploadModal({
 }: Props) {
   const { toast } = useToast();
   const [name, setName] = useState("");
-  const [language, setLanguage] = useState("");
+  const [language, setLanguage] = useState("da");
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
 
@@ -68,10 +68,10 @@ export default function VoiceUploadModal({
     try {
       await uploadVoice(name, language, file);
       toast({ title: "Stemme uploadet", description: `"${name}" blev uploadet.` });
-      onSuccess();
+      onSuccess(name);
       onOpenChange(false);
       setName("");
-      setLanguage("");
+      setLanguage("da");
       setFile(null);
     } catch {
       toast({
