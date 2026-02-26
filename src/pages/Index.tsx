@@ -161,9 +161,8 @@ const Index = () => {
       {/* Header */}
       <header className="border-b bg-primary text-primary-foreground">
         <div className="mx-auto flex max-w-2xl items-center gap-4 px-8 py-5">
-          <ThemeToggle />
           <img src={rnLogo} alt="Region Nordjylland" className="h-12 w-12 object-contain" />
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl font-semibold tracking-tight">
               Regional Tekst-til-Tale Service
             </h1>
@@ -171,6 +170,7 @@ const Index = () => {
               Region Nordjylland
             </p>
           </div>
+          <ThemeToggle />
         </div>
       </header>
 

@@ -22,10 +22,10 @@ export function ThemeToggle() {
 
   return (
     <Button
-      variant="ghost"
+      variant="outline"
       size="icon"
       onClick={() => setDark((d) => !d)}
-      className="text-primary-foreground hover:bg-primary-foreground/20"
+      className="border-primary-foreground/30 bg-primary-foreground/10 text-primary-foreground hover:bg-primary-foreground/20"
       aria-label={dark ? "Skift til lys tilstand" : "Skift til mørk tilstand"}
     >
       {dark ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
