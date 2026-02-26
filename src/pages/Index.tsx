@@ -159,7 +159,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b bg-primary text-primary-foreground">
+      <header className="bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-lg">
         <div className="mx-auto flex max-w-2xl items-center gap-4 px-8 py-5">
           <img src={rnLogo} alt="Region Nordjylland" className="h-12 w-12 object-contain" />
           <div className="flex-1">
@@ -176,7 +176,7 @@ const Index = () => {
 
       {/* Main content */}
       <main className="mx-auto max-w-2xl px-4 py-16">
-        <Card className="shadow-lg">
+        <Card className="shadow-xl hover:shadow-2xl bg-card/95 backdrop-blur-sm">
           <CardHeader className="p-8 pb-2">
             <CardTitle className="flex items-center gap-3 text-xl">
               <Volume2 className="h-6 w-6" />
@@ -192,7 +192,7 @@ const Index = () => {
               <Textarea
                 id="tts-text"
                 placeholder="Skriv eller indsæt den tekst du vil have læst op..."
-                className="min-h-[180px] text-lg p-4"
+                className="min-h-[180px] text-lg p-4 transition-all duration-200 focus:shadow-lg focus:shadow-primary/10"
                 value={text}
                 onChange={(e) => {
                   setText(e.target.value);
@@ -259,7 +259,7 @@ const Index = () => {
                 Upload stemme
               </Button>
               <Button
-                className="flex-1 h-14 text-lg rounded-xl"
+                className="flex-1 h-14 text-lg rounded-xl bg-gradient-to-r from-primary to-primary/80 hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02]"
                 size="lg"
                 onClick={handleGenerate}
                 disabled={generating}
@@ -285,7 +285,7 @@ const Index = () => {
 
             {/* Audio output */}
             {audioUrl && !generating && (
-              <div className="space-y-4 rounded-xl border bg-muted/50 p-6">
+              <div className="space-y-4 rounded-xl border bg-gradient-to-br from-muted/50 to-muted/30 backdrop-blur-sm p-6">
                 <p className="text-base font-medium">Din lydfil er klar:</p>
                 <audio controls src={audioUrl} className="w-full" />
                 <div className="flex items-center gap-0">
