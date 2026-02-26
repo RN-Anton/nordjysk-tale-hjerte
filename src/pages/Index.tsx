@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import rnLogo from "@/assets/rn-logo.png";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -161,9 +162,7 @@ const Index = () => {
       <header className="border-b bg-primary text-primary-foreground">
         <div className="mx-auto flex max-w-2xl items-center gap-4 px-8 py-5">
           <ThemeToggle />
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-foreground/20 text-base font-bold">
-            RN
-          </div>
+          <img src={rnLogo} alt="Region Nordjylland" className="h-12 w-12 object-contain" />
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">
               Regional Tekst-til-Tale Service
