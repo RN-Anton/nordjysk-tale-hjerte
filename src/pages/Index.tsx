@@ -29,11 +29,15 @@ const Index = () => {
   // Data from API
   const [voices, setVoices] = useState<Voice[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
+  const [voicesLoading, setVoicesLoading] = useState(true);
+  const [languagesLoading, setLanguagesLoading] = useState(true);
+  const [voicesError, setVoicesError] = useState("");
+  const [languagesError, setLanguagesError] = useState("");
 
   // Form state with defaults
   const [text, setText] = useState("");
-  const [voice, setVoice] = useState("danish_voice");
-  const [language, setLanguage] = useState("da");
+  const [voice, setVoice] = useState("");
+  const [language, setLanguage] = useState("");
   const [textError, setTextError] = useState("");
 
   // Generation state
@@ -50,30 +54,36 @@ const Index = () => {
     fetchVoices()
       .then((v) => {
         setVoices(v);
-        // Keep default "danish_voice" if it exists, otherwise first
-        const hasDanish = v.some((item) => item.id === "danish_voice");
-        if (!hasDanish && v.length > 0) setVoice(v[0].id);
+        setVoice(v[0]?.id ?? "");
+        setVoicesError("");
       })
-      .catch(() =>
+      .catch((err) => {
+        console.error("[TTS] fetchVoices failed:", err);
+        setVoicesError(err.message || "Kunne ikke hente stemmer");
         toast({
           title: "Fejl",
-          description: "Kunne ikke hente stemmer fra serveren.",
+          description: err.message || "Kunne ikke hente stemmer fra serveren.",
           variant: "destructive",
-        })
-      );
+        });
+      })
+      .finally(() => setVoicesLoading(false));
 
     fetchLanguages()
       .then((l) => {
         setLanguages(l);
-        if (l.length > 0) setLanguage(l[0].id);
+        setLanguage(l[0]?.id ?? "");
+        setLanguagesError("");
       })
-      .catch(() =>
+      .catch((err) => {
+        console.error("[TTS] fetchLanguages failed:", err);
+        setLanguagesError(err.message || "Kunne ikke hente sprog");
         toast({
           title: "Fejl",
-          description: "Kunne ikke hente sprog fra serveren.",
+          description: err.message || "Kunne ikke hente sprog fra serveren.",
           variant: "destructive",
-        })
-      );
+        });
+      })
+      .finally(() => setLanguagesLoading(false));
   }, []);
 
   const handleGenerate = async () => {
@@ -186,44 +196,40 @@ const Index = () => {
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-2">
                 <Label className="text-sm">Stemme</Label>
-                <Select value={voice} onValueChange={setVoice}>
+                <Select value={voice} onValueChange={setVoice} disabled={voicesLoading || voices.length === 0}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Vælg stemme" />
+                    <SelectValue placeholder={voicesLoading ? "Henter stemmer…" : "Vælg stemme"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {voices.length > 0 ? (
-                      voices.map((v) => (
-                        <SelectItem key={v.id} value={v.id}>
-                          {v.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="danish_voice">
-                        danish_voice
+                    {voices.map((v) => (
+                      <SelectItem key={v.id} value={v.id}>
+                        {v.name}
                       </SelectItem>
-                    )}
+                    ))}
                   </SelectContent>
                 </Select>
+                {voicesError && (
+                  <p className="text-xs text-destructive">{voicesError}</p>
+                )}
               </div>
 
               <div className="space-y-2">
                 <Label className="text-sm">Sprog</Label>
-                <Select value={language} onValueChange={setLanguage}>
+                <Select value={language} onValueChange={setLanguage} disabled={languagesLoading || languages.length === 0}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Vælg sprog" />
+                    <SelectValue placeholder={languagesLoading ? "Henter sprog…" : "Vælg sprog"} />
                   </SelectTrigger>
                   <SelectContent>
-                    {languages.length > 0 ? (
-                      languages.map((l) => (
-                        <SelectItem key={l.id} value={l.id}>
-                          {l.name}
-                        </SelectItem>
-                      ))
-                    ) : (
-                      <SelectItem value="da">Dansk</SelectItem>
-                    )}
+                    {languages.map((l) => (
+                      <SelectItem key={l.id} value={l.id}>
+                        {l.name}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+                {languagesError && (
+                  <p className="text-xs text-destructive">{languagesError}</p>
+                )}
               </div>
 
             </div>

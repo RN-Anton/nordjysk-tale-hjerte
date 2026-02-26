@@ -3,9 +3,18 @@ import { API_BASE_URL, API_KEY } from "../config/config";
 const BASE_URL = API_BASE_URL;
 const TTS_PREFIX = "/api/v1/tts";
 
-const headers = () => ({
-  "X-API-Key": API_KEY,
-});
+function validateConfig() {
+  if (!API_BASE_URL || !API_KEY) {
+    throw new Error(
+      `API config mangler: API_BASE_URL="${API_BASE_URL}", API_KEY="${API_KEY ? "***" : ""}". Opdatér src/config/config.ts.`
+    );
+  }
+}
+
+const headers = () => {
+  validateConfig();
+  return { "X-API-Key": API_KEY };
+};
 
 export interface Voice {
   id: string;
@@ -17,20 +26,70 @@ export interface Language {
   name: string;
 }
 
+// Normalise voices: supports [{name:"x"}, ...] or ["x", ...]
+function normalizeVoices(raw: unknown[]): Voice[] {
+  const seen = new Set<string>();
+  const result: Voice[] = [];
+  for (const entry of raw) {
+    let name: string | undefined;
+    if (typeof entry === "string") {
+      name = entry;
+    } else if (entry && typeof entry === "object" && "name" in entry) {
+      name = String((entry as Record<string, unknown>).name);
+    }
+    if (name && !seen.has(name)) {
+      seen.add(name);
+      result.push({ id: name, name });
+    }
+  }
+  return result;
+}
+
+// Normalise languages: supports ["da", ...] or [{id/code/name:"da"}, ...]
+function normalizeLanguages(raw: unknown[]): Language[] {
+  const seen = new Set<string>();
+  const result: Language[] = [];
+  for (const entry of raw) {
+    let id: string | undefined;
+    let name: string | undefined;
+    if (typeof entry === "string") {
+      id = entry;
+      name = entry;
+    } else if (entry && typeof entry === "object") {
+      const obj = entry as Record<string, unknown>;
+      id = String(obj.id ?? obj.code ?? obj.name ?? "");
+      name = String(obj.name ?? obj.id ?? obj.code ?? "");
+    }
+    if (id && name && !seen.has(id)) {
+      seen.add(id);
+      result.push({ id, name });
+    }
+  }
+  return result;
+}
+
 export async function fetchVoices(): Promise<Voice[]> {
   const res = await fetch(`${BASE_URL}${TTS_PREFIX}/voices`, { headers: headers() });
-  if (!res.ok) throw new Error("Kunne ikke hente stemmer");
+  if (!res.ok) throw new Error(`Kunne ikke hente stemmer (HTTP ${res.status})`);
   const data = await res.json();
-  const voices = data.voices || [];
-  return voices.map((v: { name: string }) => ({ id: v.name, name: v.name }));
+  console.log("[TTS] /voices raw response:", JSON.stringify(data));
+  const raw = data.voices ?? data;
+  if (!Array.isArray(raw)) throw new Error("Uventet voices-format fra backend");
+  const voices = normalizeVoices(raw);
+  if (voices.length === 0) throw new Error("Backend returnerede ingen stemmer");
+  return voices;
 }
 
 export async function fetchLanguages(): Promise<Language[]> {
   const res = await fetch(`${BASE_URL}${TTS_PREFIX}/languages`, { headers: headers() });
-  if (!res.ok) throw new Error("Kunne ikke hente sprog");
+  if (!res.ok) throw new Error(`Kunne ikke hente sprog (HTTP ${res.status})`);
   const data = await res.json();
-  const languages = data.languages || [];
-  return languages.map((lang: string) => ({ id: lang, name: lang }));
+  console.log("[TTS] /languages raw response:", JSON.stringify(data));
+  const raw = data.languages ?? data;
+  if (!Array.isArray(raw)) throw new Error("Uventet languages-format fra backend");
+  const languages = normalizeLanguages(raw);
+  if (languages.length === 0) throw new Error("Backend returnerede ingen sprog");
+  return languages;
 }
 
 export async function generateSpeech(
