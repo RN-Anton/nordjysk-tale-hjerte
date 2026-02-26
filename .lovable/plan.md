@@ -1,61 +1,74 @@
 
 
-# Make the UI "Sexy" -- Premium Visual Polish
+# Visual Polish: Bigger, Cleaner, Designer-Quality UI
 
-## What changes
+## Overview
+Elevate the UI to feel like it was crafted by a professional designer. Bigger touch targets, more whitespace, refined typography, subtle polish -- while keeping the clean Region Nordjylland identity.
 
-### 1. `src/index.css` -- Add gradient background, smooth transitions, and glow effects
-- Replace flat background with a subtle gradient (light: soft blue-white gradient; dark: deep navy gradient)
-- Add smooth transition on all interactive elements for a buttery feel
-- Add a subtle card glow/shadow effect via custom utility classes
-- Add a pulsing gradient animation for the generate button
+## Changes
 
-### 2. `src/pages/Index.tsx` -- Elevated layout and micro-interactions
-- **Header**: Add a subtle backdrop blur and gradient overlay so it feels layered and premium. Remove the hard `border-b` and replace with a soft shadow
-- **Card**: Add a subtle border glow effect, slightly translucent background (`bg-card/80 backdrop-blur`), and a hover lift transition
-- **Textarea**: Add a focus glow ring effect (subtle blue glow on focus) and smooth transition
-- **Primary CTA button ("Generer lydfil")**: Add a gradient background (primary to a slightly lighter shade) with a subtle hover glow/shadow effect. Add a scale-up micro-animation on hover
-- **Upload button**: Add a subtle hover lift effect
-- **Audio output section**: Add a gradient border or subtle inner glow to make it feel special
-- **Progress bar**: Add a gradient fill and a shimmer/pulse animation while generating
-- **Overall spacing**: Keep current generous spacing, just refine with more consistent rhythm
+### 1. `src/index.css` -- Refined global styles
+- Increase `--radius` from `0.5rem` to `0.75rem` for softer, more modern corners
+- Add smooth font rendering (`-webkit-font-smoothing: antialiased`)
+- Add subtle selection color styling
 
-### 3. `src/components/ui/progress.tsx` -- Animated gradient progress bar
-- Change the indicator from solid `bg-primary` to a gradient
-- Add a shimmer animation overlay for a premium loading feel
+### 2. `src/pages/Index.tsx` -- Layout and component sizing
 
-### 4. `src/components/ui/card.tsx` -- Premium card styling
-- Add `transition-all duration-300` for smooth hover effects
-- Support backdrop-blur by default
+**Header**:
+- Increase padding (`py-5 px-8`) and title size (`text-2xl`)
+- Make the RN logo badge larger (`h-12 w-12`, bigger text)
+- Add subtle subtitle letter-spacing
 
-### 5. `src/components/ui/button.tsx` -- Smooth transitions
-- Add `transition-all duration-200` to all buttons for smoother hover states
+**Card**:
+- Increase max-width to `max-w-2xl` and center with generous vertical padding (`py-16`)
+- Add larger shadow (`shadow-lg`) and more internal padding
+- Make card title larger (`text-xl`) with a larger icon
 
-## Technical details
+**Textarea**:
+- Increase min-height to `180px` and font size to `text-lg`
+- Add more padding inside
 
-### New CSS additions in `index.css`
-- Keyframe animation `shimmer` for progress bar shine effect
-- Keyframe animation `glow-pulse` for subtle button glow
-- Utility class `.glass` for glassmorphism card effect
-- Smooth `transition-colors duration-200` on body-level interactive elements
+**Select triggers**:
+- Make them taller (`h-12`) with larger text
+- Labels bump to `text-base font-medium`
 
-### Index.tsx specific changes
-- Header: `bg-gradient-to-r from-primary to-primary/90 shadow-lg` instead of flat `bg-primary border-b`
-- Card: add `backdrop-blur-sm bg-card/95 shadow-xl hover:shadow-2xl transition-all duration-300`
-- Generate button: `bg-gradient-to-r from-primary to-primary/80 hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02] transition-all duration-200`
-- Textarea: `focus:shadow-lg focus:shadow-primary/10 transition-all duration-200`
-- Audio section: `bg-gradient-to-br from-muted/50 to-muted/30 backdrop-blur-sm`
+**Buttons**:
+- "Upload stemme" button: use `size="lg"` with `h-12 px-6 text-base`
+- "Generer lydfil" button: make even larger (`h-14 text-lg rounded-xl`) as the primary CTA
+- Download button group: `size="lg"` with `h-12`
 
-### Files changed
+**Audio output section**:
+- More padding, larger rounded corners (`rounded-xl p-6`)
+- Bigger label text
+
+**Progress bar**:
+- Slightly taller (`h-4`) for better visibility
+
+**General spacing**:
+- Increase `space-y-6` to `space-y-8` for more breathing room between sections
+- Settings grid gap from `gap-4` to `gap-6`
+- Actions row gap from `gap-3` to `gap-4`
+
+### 3. `src/components/VoiceUploadModal.tsx` -- Consistent sizing
+- Make modal inputs taller (add `h-12` class)
+- Upload button uses `size="lg"`
+- More internal spacing
+
+### 4. `src/components/ui/button.tsx` -- Global button size adjustments
+- Default size: increase from `h-10` to `h-11`
+- `lg` size: increase from `h-11` to `h-12 px-8 text-base`
+- `icon` size: increase from `h-10 w-10` to `h-11 w-11`
+- Add `font-semibold` to all buttons for stronger presence
+
+## Files changed
 - `src/index.css`
 - `src/pages/Index.tsx`
-- `src/components/ui/progress.tsx`
+- `src/components/VoiceUploadModal.tsx`
 - `src/components/ui/button.tsx`
-- `src/components/ui/card.tsx`
 
-### What stays the same
-- All functionality, API calls, state logic
+## What stays the same
+- All functionality (API calls, state, logic)
 - Color palette (Region Nordjylland blue identity)
 - Dark mode support
-- Component structure and layout hierarchy
+- Component structure
 
