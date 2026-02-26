@@ -1,40 +1,74 @@
 
 
-# Three changes: Default Danish, auto-select uploaded voice, download format picker
+# Visual Polish: Bigger, Cleaner, Designer-Quality UI
 
-## 1. Default language to Danish ("da")
+## Overview
+Elevate the UI to feel like it was crafted by a professional designer. Bigger touch targets, more whitespace, refined typography, subtle polish -- while keeping the clean Region Nordjylland identity.
 
-**Index.tsx**: When languages load, find the entry with `id === "da"` and use that as default instead of `l[0]`. Fallback to first entry if "da" not found.
+## Changes
 
-**VoiceUploadModal.tsx**: Initialize `language` state to `"da"` instead of `""`, so Danish is pre-selected when the modal opens.
+### 1. `src/index.css` -- Refined global styles
+- Increase `--radius` from `0.5rem` to `0.75rem` for softer, more modern corners
+- Add smooth font rendering (`-webkit-font-smoothing: antialiased`)
+- Add subtle selection color styling
 
-## 2. Auto-select newly uploaded voice
+### 2. `src/pages/Index.tsx` -- Layout and component sizing
 
-**VoiceUploadModal.tsx**: Change `onSuccess` callback signature to `onSuccess(voiceName: string)` so it passes the uploaded voice name back.
+**Header**:
+- Increase padding (`py-5 px-8`) and title size (`text-2xl`)
+- Make the RN logo badge larger (`h-12 w-12`, bigger text)
+- Add subtle subtitle letter-spacing
 
-**Index.tsx**: Update `refreshVoices` to accept a `voiceName` parameter. After fetching the updated voice list, set the selected voice to the newly uploaded one. Update the `onSuccess` prop passed to the modal accordingly.
+**Card**:
+- Increase max-width to `max-w-2xl` and center with generous vertical padding (`py-16`)
+- Add larger shadow (`shadow-lg`) and more internal padding
+- Make card title larger (`text-xl`) with a larger icon
 
-## 3. Download format dropdown (WAV, MP3, AU)
+**Textarea**:
+- Increase min-height to `180px` and font size to `text-lg`
+- Add more padding inside
 
-**Index.tsx**: Add a `downloadFormat` state (default `"wav"`). Replace the single "Download lydfil" button with a button group: a primary download button and a dropdown next to it for format selection (`.wav`, `.mp3`, `.au`).
+**Select triggers**:
+- Make them taller (`h-12`) with larger text
+- Labels bump to `text-base font-medium`
 
-The download handler will use the selected format for the file extension. Since the backend generates `.wav`, the file is downloaded as-is with the chosen extension. (Client-side audio conversion is not feasible without extra libraries, so this gives the user the filename they want -- if actual format conversion is needed later, that would be a backend feature.)
+**Buttons**:
+- "Upload stemme" button: use `size="lg"` with `h-12 px-6 text-base`
+- "Generer lydfil" button: make even larger (`h-14 text-lg rounded-xl`) as the primary CTA
+- Download button group: `size="lg"` with `h-12`
 
-Uses the existing `DropdownMenu` component already available in the project.
+**Audio output section**:
+- More padding, larger rounded corners (`rounded-xl p-6`)
+- Bigger label text
 
-## Technical details
+**Progress bar**:
+- Slightly taller (`h-4`) for better visibility
 
-### Files changed
+**General spacing**:
+- Increase `space-y-6` to `space-y-8` for more breathing room between sections
+- Settings grid gap from `gap-4` to `gap-6`
+- Actions row gap from `gap-3` to `gap-4`
 
-**`src/pages/Index.tsx`**:
-- Language default: find `"da"` in loaded languages array
-- `refreshVoices` accepts optional `voiceName` string, sets `voice` state to it after fetch
-- Add `downloadFormat` state, default `"wav"`
-- Replace download button with button + dropdown menu for format selection
-- Import `DropdownMenu` components and `ChevronDown` icon
+### 3. `src/components/VoiceUploadModal.tsx` -- Consistent sizing
+- Make modal inputs taller (add `h-12` class)
+- Upload button uses `size="lg"`
+- More internal spacing
 
-**`src/components/VoiceUploadModal.tsx`**:
-- Change `onSuccess` prop type to `(voiceName: string) => void`
-- Initialize `language` state to `"da"`
-- Pass `name` to `onSuccess(name)` on successful upload
+### 4. `src/components/ui/button.tsx` -- Global button size adjustments
+- Default size: increase from `h-10` to `h-11`
+- `lg` size: increase from `h-11` to `h-12 px-8 text-base`
+- `icon` size: increase from `h-10 w-10` to `h-11 w-11`
+- Add `font-semibold` to all buttons for stronger presence
+
+## Files changed
+- `src/index.css`
+- `src/pages/Index.tsx`
+- `src/components/VoiceUploadModal.tsx`
+- `src/components/ui/button.tsx`
+
+## What stays the same
+- All functionality (API calls, state, logic)
+- Color palette (Region Nordjylland blue identity)
+- Dark mode support
+- Component structure
 
