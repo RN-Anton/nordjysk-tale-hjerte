@@ -159,16 +159,16 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b bg-primary text-primary-foreground">
-        <div className="mx-auto flex max-w-3xl items-center gap-4 px-6 py-4">
+        <div className="mx-auto flex max-w-2xl items-center gap-4 px-8 py-5">
           <ThemeToggle />
-          <div className="flex h-10 w-10 items-center justify-center rounded bg-primary-foreground/20 text-sm font-bold">
+          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-foreground/20 text-base font-bold">
             RN
           </div>
           <div>
-            <h1 className="text-xl font-semibold tracking-tight">
+            <h1 className="text-2xl font-semibold tracking-tight">
               Regional Tekst-til-Tale Service
             </h1>
-            <p className="text-sm text-primary-foreground/70">
+            <p className="text-sm tracking-wide text-primary-foreground/70">
               Region Nordjylland
             </p>
           </div>
@@ -176,15 +176,15 @@ const Index = () => {
       </header>
 
       {/* Main content */}
-      <main className="mx-auto max-w-3xl px-4 py-10">
-        <Card className="shadow-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Volume2 className="h-5 w-5" />
+      <main className="mx-auto max-w-2xl px-4 py-16">
+        <Card className="shadow-lg">
+          <CardHeader className="p-8 pb-2">
+            <CardTitle className="flex items-center gap-3 text-xl">
+              <Volume2 className="h-6 w-6" />
               Generer tale fra tekst
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-8 p-8 pt-6">
             {/* Text input */}
             <div className="space-y-2">
               <Label htmlFor="tts-text" className="text-base font-medium">
@@ -193,7 +193,7 @@ const Index = () => {
               <Textarea
                 id="tts-text"
                 placeholder="Skriv eller indsæt den tekst du vil have læst op..."
-                className="min-h-[140px] text-base"
+                className="min-h-[180px] text-lg p-4"
                 value={text}
                 onChange={(e) => {
                   setText(e.target.value);
@@ -208,11 +208,11 @@ const Index = () => {
             </div>
 
             {/* Settings row */}
-            <div className="grid gap-4 sm:grid-cols-3">
+            <div className="grid gap-6 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label className="text-sm">Stemme</Label>
+                <Label className="text-base font-medium">Stemme</Label>
                 <Select value={voice} onValueChange={setVoice} disabled={voicesLoading || voices.length === 0}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 text-base">
                     <SelectValue placeholder={voicesLoading ? "Henter stemmer…" : "Vælg stemme"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -229,9 +229,9 @@ const Index = () => {
               </div>
 
               <div className="space-y-2">
-                <Label className="text-sm">Sprog</Label>
+                <Label className="text-base font-medium">Sprog</Label>
                 <Select value={language} onValueChange={setLanguage} disabled={languagesLoading || languages.length === 0}>
-                  <SelectTrigger>
+                  <SelectTrigger className="h-12 text-base">
                     <SelectValue placeholder={languagesLoading ? "Henter sprog…" : "Vælg sprog"} />
                   </SelectTrigger>
                   <SelectContent>
@@ -250,16 +250,17 @@ const Index = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="flex flex-col gap-4 sm:flex-row">
               <Button
                 variant="outline"
+                size="lg"
                 onClick={() => setUploadOpen(true)}
               >
                 <Upload className="mr-2 h-4 w-4" />
                 Upload stemme
               </Button>
               <Button
-                className="flex-1 text-base"
+                className="flex-1 h-14 text-lg rounded-xl"
                 size="lg"
                 onClick={handleGenerate}
                 disabled={generating}
@@ -279,23 +280,23 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground">
                   Behandler din tekst...
                 </p>
-                <Progress value={progress} className="h-3" />
+                <Progress value={progress} className="h-4" />
               </div>
             )}
 
             {/* Audio output */}
             {audioUrl && !generating && (
-              <div className="space-y-4 rounded-lg border bg-muted/50 p-4">
-                <p className="text-sm font-medium">Din lydfil er klar:</p>
+              <div className="space-y-4 rounded-xl border bg-muted/50 p-6">
+                <p className="text-base font-medium">Din lydfil er klar:</p>
                 <audio controls src={audioUrl} className="w-full" />
                 <div className="flex items-center gap-0">
-                  <Button variant="outline" onClick={handleDownload} className="rounded-r-none">
+                  <Button variant="outline" size="lg" onClick={handleDownload} className="rounded-r-none">
                     <Download className="mr-2 h-4 w-4" />
                     Download .{downloadFormat}
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" className="rounded-l-none border-l-0 px-2">
+                      <Button variant="outline" size="lg" className="rounded-l-none border-l-0 px-3">
                         <ChevronDown className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
