@@ -34,7 +34,6 @@ const Index = () => {
   const [text, setText] = useState("");
   const [voice, setVoice] = useState("danish_voice");
   const [language, setLanguage] = useState("da");
-  const [format, setFormat] = useState("wav");
   const [textError, setTextError] = useState("");
 
   // Generation state
@@ -98,7 +97,7 @@ const Index = () => {
     }, 300);
 
     try {
-      const blob = await generateSpeech(text, voice, language, format);
+      const blob = await generateSpeech(text, voice, language);
       clearInterval(progressInterval);
       setProgress(100);
       audioBlobRef.current = blob;
@@ -121,7 +120,7 @@ const Index = () => {
     if (!audioUrl) return;
     const a = document.createElement("a");
     a.href = audioUrl;
-    a.download = `tale.${format}`;
+    a.download = `tale.wav`;
     a.click();
   };
 
@@ -227,18 +226,6 @@ const Index = () => {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label className="text-sm">Output format</Label>
-                <Select value={format} onValueChange={setFormat}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="wav">.wav</SelectItem>
-                    <SelectItem value="mp3">.mp3</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
 
             {/* Actions */}
