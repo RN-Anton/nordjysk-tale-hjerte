@@ -94,11 +94,12 @@ export default function VoiceUploadModal({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-2">
+        <div className="space-y-5 py-4">
           <div className="space-y-2">
             <Label htmlFor="voice-name">Stemmenavn</Label>
             <Input
               id="voice-name"
+              className="h-12"
               placeholder="F.eks. Min stemme"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -108,7 +109,7 @@ export default function VoiceUploadModal({
           <div className="space-y-2">
             <Label>Sprog</Label>
             <Select value={language} onValueChange={setLanguage}>
-              <SelectTrigger>
+              <SelectTrigger className="h-12">
                 <SelectValue placeholder="Vælg sprog" />
               </SelectTrigger>
               <SelectContent>
@@ -136,6 +137,7 @@ export default function VoiceUploadModal({
           <Button
             onClick={handleSubmit}
             disabled={uploading}
+            size="lg"
             className="w-full sm:w-auto"
           >
             {uploading ? (
