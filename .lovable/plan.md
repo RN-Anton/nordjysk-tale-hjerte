@@ -1,34 +1,40 @@
 
 
-# Fix: Double-nested API response parsing
+# Three changes: Default Danish, auto-select uploaded voice, download format picker
 
-## Problem
-The backend wraps responses in a double-nested structure that the frontend doesn't handle:
-- `/voices` returns `{"voices": {"voices": [...]}}`  
-- `/languages` returns `{"languages": {"languages": [...]}}`
+## 1. Default language to Danish ("da")
 
-The current `normalizeVoices`/`normalizeLanguages` receive an object instead of an array, so they return empty results.
+**Index.tsx**: When languages load, find the entry with `id === "da"` and use that as default instead of `l[0]`. Fallback to first entry if "da" not found.
 
-## Fix in `src/lib/api.ts`
+**VoiceUploadModal.tsx**: Initialize `language` state to `"da"` instead of `""`, so Danish is pre-selected when the modal opens.
 
-### `fetchVoices` (around line 70-80)
-Change the raw data extraction to unwrap the double nesting:
-```
-const outer = data.voices ?? data;
-const raw = Array.isArray(outer) ? outer : (outer.voices ?? outer);
-```
-This handles both `{"voices": [...]}` and `{"voices": {"voices": [...]}}`.
+## 2. Auto-select newly uploaded voice
 
-### `fetchLanguages` (around line 82-92)
-Same pattern:
-```
-const outer = data.languages ?? data;
-const raw = Array.isArray(outer) ? outer : (outer.languages ?? outer);
-```
+**VoiceUploadModal.tsx**: Change `onSuccess` callback signature to `onSuccess(voiceName: string)` so it passes the uploaded voice name back.
 
-### `normalizeLanguages` function
-The backend returns language objects with `code` and `name` fields (e.g. `{"code":"da","name":"Danish"}`). Update the normalizer to also read the `code` field for the `id`:
-- Already handled: the existing code reads `obj.code` as a fallback for `id`. No change needed here.
+**Index.tsx**: Update `refreshVoices` to accept a `voiceName` parameter. After fetching the updated voice list, set the selected voice to the newly uploaded one. Update the `onSuccess` prop passed to the modal accordingly.
 
-## Summary of changes
-Only `src/lib/api.ts` needs to be edited -- two small changes to unwrap the double-nested response before passing to the normalizer functions. No UI changes needed since the loading/error states already work correctly.
+## 3. Download format dropdown (WAV, MP3, AU)
+
+**Index.tsx**: Add a `downloadFormat` state (default `"wav"`). Replace the single "Download lydfil" button with a button group: a primary download button and a dropdown next to it for format selection (`.wav`, `.mp3`, `.au`).
+
+The download handler will use the selected format for the file extension. Since the backend generates `.wav`, the file is downloaded as-is with the chosen extension. (Client-side audio conversion is not feasible without extra libraries, so this gives the user the filename they want -- if actual format conversion is needed later, that would be a backend feature.)
+
+Uses the existing `DropdownMenu` component already available in the project.
+
+## Technical details
+
+### Files changed
+
+**`src/pages/Index.tsx`**:
+- Language default: find `"da"` in loaded languages array
+- `refreshVoices` accepts optional `voiceName` string, sets `voice` state to it after fetch
+- Add `downloadFormat` state, default `"wav"`
+- Replace download button with button + dropdown menu for format selection
+- Import `DropdownMenu` components and `ChevronDown` icon
+
+**`src/components/VoiceUploadModal.tsx`**:
+- Change `onSuccess` prop type to `(voiceName: string) => void`
+- Initialize `language` state to `"da"`
+- Pass `name` to `onSuccess(name)` on successful upload
+
