@@ -73,7 +73,8 @@ export async function fetchVoices(): Promise<Voice[]> {
   if (!res.ok) throw new Error(`Kunne ikke hente stemmer (HTTP ${res.status})`);
   const data = await res.json();
   console.log("[TTS] /voices raw response:", JSON.stringify(data));
-  const raw = data.voices ?? data;
+  const outer = data.voices ?? data;
+  const raw = Array.isArray(outer) ? outer : (outer.voices ?? outer);
   if (!Array.isArray(raw)) throw new Error("Uventet voices-format fra backend");
   const voices = normalizeVoices(raw);
   if (voices.length === 0) throw new Error("Backend returnerede ingen stemmer");
@@ -85,7 +86,8 @@ export async function fetchLanguages(): Promise<Language[]> {
   if (!res.ok) throw new Error(`Kunne ikke hente sprog (HTTP ${res.status})`);
   const data = await res.json();
   console.log("[TTS] /languages raw response:", JSON.stringify(data));
-  const raw = data.languages ?? data;
+  const outer = data.languages ?? data;
+  const raw = Array.isArray(outer) ? outer : (outer.languages ?? outer);
   if (!Array.isArray(raw)) throw new Error("Uventet languages-format fra backend");
   const languages = normalizeLanguages(raw);
   if (languages.length === 0) throw new Error("Backend returnerede ingen sprog");
