@@ -290,7 +290,7 @@ const BulkGenerator = ({
         </p>
         <Textarea
           placeholder={"Velkommen til Region Nordjylland.\nVi glæder os til at hjælpe dig.\n\nDin tid er booket til mandag.\nHusk at medbringe dit sundhedskort.\n\nTak fordi du kontaktede os."}
-          className="min-h-[150px] text-base p-4"
+          className="min-h-[220px] text-base p-4"
           value={bulkText}
           onChange={(e) => setBulkText(e.target.value)}
         />
