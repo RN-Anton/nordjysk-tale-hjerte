@@ -230,7 +230,7 @@ const BulkGenerator = ({
       }, 300);
 
       try {
-        const blob = await generateSpeech(line.text, voice, language, speed);
+        const blob = await generateSpeech(line.text, voice, language, 0.5);
         clearInterval(interval);
         const url = URL.createObjectURL(blob);
         setLines((prev) =>
@@ -353,29 +353,6 @@ const BulkGenerator = ({
         </div>
       </div>
 
-      {/* Speed slider */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-base font-medium flex items-center gap-2">
-            <Gauge className="h-4 w-4" />
-            Hastighed
-          </Label>
-          <span className="text-sm font-semibold tabular-nums">{speed.toFixed(2)}x</span>
-        </div>
-        <Slider
-          min={0}
-          max={2}
-          step={0.01}
-          value={[speed]}
-          onValueChange={([v]) => setSpeed(Math.max(0.5, v))}
-          className="w-full"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>0</span>
-          <span>1.0x</span>
-          <span>2.0x</span>
-        </div>
-      </div>
 
       {/* Queue */}
       {lines.length > 0 && (

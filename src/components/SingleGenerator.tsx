@@ -108,7 +108,7 @@ const SingleGenerator = ({
       setProgress((prev) => Math.min(prev + 8, 90));
     }, 300);
     try {
-      const blob = await generateSpeech(text, voice, language, speed);
+      const blob = await generateSpeech(text, voice, language, 0.5);
       clearInterval(progressInterval);
       setProgress(100);
       audioBlobRef.current = blob;
@@ -203,29 +203,6 @@ const SingleGenerator = ({
         </div>
       </div>
 
-      {/* Speed slider */}
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <Label className="text-base font-medium flex items-center gap-2">
-            <Gauge className="h-4 w-4" />
-            Hastighed
-          </Label>
-          <span className="text-sm font-semibold tabular-nums">{speed.toFixed(2)}x</span>
-        </div>
-        <Slider
-          min={0}
-          max={2}
-          step={0.01}
-          value={[speed]}
-          onValueChange={([v]) => setSpeed(Math.max(0.5, v))}
-          className="w-full"
-        />
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>0</span>
-          <span>1.0x</span>
-          <span>2.0x</span>
-        </div>
-      </div>
 
       {/* Actions */}
       <div className="flex flex-col gap-4 sm:flex-row">
