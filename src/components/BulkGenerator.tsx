@@ -365,7 +365,7 @@ const BulkGenerator = ({
         <Slider
           min={0.5}
           max={2}
-          step={0.25}
+          step={0.01}
           value={[speed]}
           onValueChange={([v]) => setSpeed(v)}
           className="w-full"
