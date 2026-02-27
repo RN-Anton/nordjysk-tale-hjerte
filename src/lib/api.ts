@@ -97,9 +97,10 @@ export async function fetchLanguages(): Promise<Language[]> {
 export async function generateSpeech(
   text: string,
   voice: string,
-  language: string
+  language: string,
+  speed: number = 1.0
 ): Promise<Blob> {
-  const payload: Record<string, string> = { text, language };
+  const payload: Record<string, unknown> = { text, language, speed };
   if (voice) {
     payload.voice = voice;
   }

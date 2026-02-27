@@ -29,7 +29,9 @@ import {
   Package,
   Play,
   Trash2,
+  Gauge,
 } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +51,8 @@ interface BulkGeneratorProps {
   setVoice: (v: string) => void;
   language: string;
   setLanguage: (l: string) => void;
+  speed: number;
+  setSpeed: (s: number) => void;
   onUploadClick: () => void;
 }
 
@@ -111,6 +115,8 @@ const BulkGenerator = ({
   setVoice,
   language,
   setLanguage,
+  speed,
+  setSpeed,
   onUploadClick,
 }: BulkGeneratorProps) => {
   const { toast } = useToast();
@@ -224,7 +230,7 @@ const BulkGenerator = ({
       }, 300);
 
       try {
-        const blob = await generateSpeech(line.text, voice, language);
+        const blob = await generateSpeech(line.text, voice, language, speed);
         clearInterval(interval);
         const url = URL.createObjectURL(blob);
         setLines((prev) =>
@@ -344,6 +350,30 @@ const BulkGenerator = ({
             </SelectContent>
           </Select>
           {languagesError && <p className="text-xs text-destructive">{languagesError}</p>}
+        </div>
+      </div>
+
+      {/* Speed slider */}
+      <div className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Label className="text-base font-medium flex items-center gap-2">
+            <Gauge className="h-4 w-4" />
+            Hastighed
+          </Label>
+          <span className="text-sm font-semibold tabular-nums">{speed.toFixed(2)}x</span>
+        </div>
+        <Slider
+          min={0.5}
+          max={2}
+          step={0.25}
+          value={[speed]}
+          onValueChange={([v]) => setSpeed(v)}
+          className="w-full"
+        />
+        <div className="flex justify-between text-xs text-muted-foreground">
+          <span>0.5x</span>
+          <span>1.0x</span>
+          <span>2.0x</span>
         </div>
       </div>
 
