@@ -1,54 +1,39 @@
 
 
-# Add AI Text Optimization Button
+# Add Speed Slider (0.5x - 2.0x)
 
 ## Overview
-Add a new "AI Optimer tekst" button that sends the user's text to the backend LLM endpoint (`/api/v1/llm/query`) and replaces it with the optimized version. The button will have a distinct AI-branded look (purple/violet gradient) to make it clearly stand out as an AI feature.
+Add a speed control slider to both the single and bulk generators, sending the `speed` parameter to the backend's `/api/v1/tts/generate` endpoint.
 
 ## Changes
 
-### 1. `src/lib/api.ts` -- Add LLM query function
+### 1. `src/lib/api.ts` -- Add `speed` parameter to `generateSpeech`
+- Add `speed: number = 1.0` as a fourth parameter
+- Include `speed` in the JSON payload sent to the backend
 
-Add a new `queryLlm` function:
-- Endpoint: `POST {BASE_URL}/api/v1/llm/query`
-- Headers: `X-API-Key` + `Content-Type: application/json`
-- Payload: `{ user_query: string }`
-- Returns the `response` string from the JSON result `{ response: "..." }`
-- Uses the same `headers()` helper and config validation as the other API calls
+### 2. `src/pages/Index.tsx` -- Shared speed state
+- Add `speed` state (default `1.0`) alongside existing `voice`/`language` state
+- Pass `speed` and `setSpeed` via `sharedProps` to both generators
 
-### 2. `src/pages/Index.tsx` -- Add AI optimize button and state
+### 3. `src/components/SingleGenerator.tsx` -- Speed slider UI + usage
+- Add `speed` and `setSpeed` to the props interface
+- Add a slider row below the voice/language selects using the existing `Slider` component from `@/components/ui/slider`
+- Slider config: `min={0.5}`, `max={2}`, `step={0.25}`, showing the current value as a label (e.g. "1.0x")
+- Pass `speed` to the `generateSpeech` call
 
-**New state:**
-- `optimizing: boolean` -- tracks loading state for the LLM call
+### 4. `src/components/BulkGenerator.tsx` -- Same slider + usage
+- Add `speed` and `setSpeed` to the props interface
+- Add the same speed slider in the settings area
+- Pass `speed` to each `generateSpeech` call in the bulk queue
 
-**New handler `handleOptimize`:**
-- Validates text is not empty
-- Calls `queryLlm(text)`
-- Replaces `text` state with the returned optimized text
-- Shows a toast on success/error
-
-**UI placement -- below the textarea:**
-- Place a new button directly under the textarea, right-aligned
-- The button uses a purple/violet gradient background (`bg-gradient-to-r from-violet-500 to-purple-600`) with white text and a `Sparkles` icon from lucide-react
-- Shows a spinning loader while optimizing
-- Label: "AI Optimer tekst"
-- Disabled when text is empty or when already optimizing/generating
-
-This keeps the layout clean: textarea at top, AI button right below it as a utility action on the text, then settings, then the main generate button.
-
-### 3. Visual distinction for the AI button
-
-- Purple/violet gradient background (clearly different from the blue primary theme)
-- `Sparkles` icon to signal AI functionality
-- Slightly smaller than the main CTA but still prominent
-- Hover state darkens the gradient
+## Slider UI
+- Placed in a new row below the voice/language grid (or as a third column on wide screens)
+- Label: "Hastighed" with the current value displayed (e.g. "1.0x")
+- Uses the existing Radix `Slider` component already in the project
 
 ## Files changed
-- `src/lib/api.ts` -- add `queryLlm()` function
-- `src/pages/Index.tsx` -- add state, handler, and AI button UI
-
-## What stays the same
-- All existing functionality and layout structure
-- Color scheme for non-AI elements
-- API authentication pattern
+- `src/lib/api.ts`
+- `src/pages/Index.tsx`
+- `src/components/SingleGenerator.tsx`
+- `src/components/BulkGenerator.tsx`
 
