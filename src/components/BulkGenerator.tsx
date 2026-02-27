@@ -286,13 +286,10 @@ const BulkGenerator = ({
       <div className="space-y-3">
         <Label className="text-base font-medium">Indsæt voicelines</Label>
         <p className="text-sm text-muted-foreground">
-          Adskil hver voiceline med en <strong>tom linje</strong>. Eksempel:
+          Adskil hver voiceline med en <strong>tom linje</strong>.
         </p>
-        <div className="rounded-lg border border-dashed bg-muted/30 p-4 text-sm text-muted-foreground font-mono whitespace-pre-line">
-          {`Velkommen til Region Nordjylland.\nVi glæder os til at hjælpe dig.\n\nDin tid er booket til mandag.\nHusk at medbringe dit sundhedskort.\n\nTak fordi du kontaktede os.`}
-        </div>
         <Textarea
-          placeholder="Indsæt dine voicelines her, adskilt med tomme linjer..."
+          placeholder={"Velkommen til Region Nordjylland.\nVi glæder os til at hjælpe dig.\n\nDin tid er booket til mandag.\nHusk at medbringe dit sundhedskort.\n\nTak fordi du kontaktede os."}
           className="min-h-[150px] text-base p-4"
           value={bulkText}
           onChange={(e) => setBulkText(e.target.value)}
