@@ -21,6 +21,7 @@ const Index = () => {
   const [languagesError, setLanguagesError] = useState("");
   const [voice, setVoice] = useState("");
   const [language, setLanguage] = useState("");
+  const [speed, setSpeed] = useState(1.0);
   const [uploadOpen, setUploadOpen] = useState(false);
 
   useEffect(() => {
@@ -75,6 +76,8 @@ const Index = () => {
     setVoice,
     language,
     setLanguage,
+    speed,
+    setSpeed,
     onUploadClick: () => setUploadOpen(true),
   };
 
