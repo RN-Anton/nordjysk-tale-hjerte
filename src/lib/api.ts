@@ -113,6 +113,17 @@ export async function generateSpeech(
   return res.blob();
 }
 
+export async function queryLlm(userQuery: string): Promise<string> {
+  const res = await fetch(`${BASE_URL}/api/v1/llm/query`, {
+    method: "POST",
+    headers: { ...headers(), "Content-Type": "application/json" },
+    body: JSON.stringify({ user_query: userQuery }),
+  });
+  if (!res.ok) throw new Error("Kunne ikke optimere teksten");
+  const data = await res.json();
+  return data.response ?? "";
+}
+
 export async function uploadVoice(
   name: string,
   language: string,

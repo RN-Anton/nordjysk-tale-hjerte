@@ -17,12 +17,13 @@ import {
   fetchVoices,
   fetchLanguages,
   generateSpeech,
+  queryLlm,
   type Voice,
   type Language,
 } from "@/lib/api";
 import VoiceUploadModal from "@/components/VoiceUploadModal";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Volume2, Download, Upload, Loader2, ChevronDown } from "lucide-react";
+import { Volume2, Download, Upload, Loader2, ChevronDown, Sparkles } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -49,6 +50,7 @@ const Index = () => {
 
   // Generation state
   const [generating, setGenerating] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const audioBlobRef = useRef<Blob | null>(null);
@@ -95,6 +97,20 @@ const Index = () => {
       })
       .finally(() => setLanguagesLoading(false));
   }, []);
+
+  const handleOptimize = async () => {
+    if (!text.trim()) return;
+    setOptimizing(true);
+    try {
+      const optimized = await queryLlm(text);
+      setText(optimized);
+      toast({ title: "Tekst optimeret", description: "Din tekst er blevet optimeret til tale." });
+    } catch {
+      toast({ title: "Fejl", description: "Kunne ikke optimere teksten. Prøv igen.", variant: "destructive" });
+    } finally {
+      setOptimizing(false);
+    }
+  };
 
   const handleGenerate = async () => {
     if (!text.trim()) {
@@ -204,6 +220,20 @@ const Index = () => {
                   {textError}
                 </p>
               )}
+              <div className="flex justify-end">
+                <button
+                  onClick={handleOptimize}
+                  disabled={!text.trim() || optimizing || generating}
+                  className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-violet-500 to-purple-600 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-violet-600 hover:to-purple-700 disabled:pointer-events-none disabled:opacity-50"
+                >
+                  {optimizing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  {optimizing ? "Optimerer..." : "AI Optimer tekst"}
+                </button>
+              </div>
             </div>
 
             {/* Settings row */}
