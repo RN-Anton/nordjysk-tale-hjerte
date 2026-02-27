@@ -213,15 +213,15 @@ const SingleGenerator = ({
           <span className="text-sm font-semibold tabular-nums">{speed.toFixed(2)}x</span>
         </div>
         <Slider
-          min={0.5}
+          min={0}
           max={2}
           step={0.01}
           value={[speed]}
-          onValueChange={([v]) => setSpeed(v)}
+          onValueChange={([v]) => setSpeed(Math.max(0.5, v))}
           className="w-full"
         />
         <div className="flex justify-between text-xs text-muted-foreground">
-          <span>0.5x</span>
+          <span>0</span>
           <span>1.0x</span>
           <span>2.0x</span>
         </div>
