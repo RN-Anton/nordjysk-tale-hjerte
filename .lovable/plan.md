@@ -1,74 +1,54 @@
 
 
-# Visual Polish: Bigger, Cleaner, Designer-Quality UI
+# Add AI Text Optimization Button
 
 ## Overview
-Elevate the UI to feel like it was crafted by a professional designer. Bigger touch targets, more whitespace, refined typography, subtle polish -- while keeping the clean Region Nordjylland identity.
+Add a new "AI Optimer tekst" button that sends the user's text to the backend LLM endpoint (`/api/v1/llm/query`) and replaces it with the optimized version. The button will have a distinct AI-branded look (purple/violet gradient) to make it clearly stand out as an AI feature.
 
 ## Changes
 
-### 1. `src/index.css` -- Refined global styles
-- Increase `--radius` from `0.5rem` to `0.75rem` for softer, more modern corners
-- Add smooth font rendering (`-webkit-font-smoothing: antialiased`)
-- Add subtle selection color styling
+### 1. `src/lib/api.ts` -- Add LLM query function
 
-### 2. `src/pages/Index.tsx` -- Layout and component sizing
+Add a new `queryLlm` function:
+- Endpoint: `POST {BASE_URL}/api/v1/llm/query`
+- Headers: `X-API-Key` + `Content-Type: application/json`
+- Payload: `{ user_query: string }`
+- Returns the `response` string from the JSON result `{ response: "..." }`
+- Uses the same `headers()` helper and config validation as the other API calls
 
-**Header**:
-- Increase padding (`py-5 px-8`) and title size (`text-2xl`)
-- Make the RN logo badge larger (`h-12 w-12`, bigger text)
-- Add subtle subtitle letter-spacing
+### 2. `src/pages/Index.tsx` -- Add AI optimize button and state
 
-**Card**:
-- Increase max-width to `max-w-2xl` and center with generous vertical padding (`py-16`)
-- Add larger shadow (`shadow-lg`) and more internal padding
-- Make card title larger (`text-xl`) with a larger icon
+**New state:**
+- `optimizing: boolean` -- tracks loading state for the LLM call
 
-**Textarea**:
-- Increase min-height to `180px` and font size to `text-lg`
-- Add more padding inside
+**New handler `handleOptimize`:**
+- Validates text is not empty
+- Calls `queryLlm(text)`
+- Replaces `text` state with the returned optimized text
+- Shows a toast on success/error
 
-**Select triggers**:
-- Make them taller (`h-12`) with larger text
-- Labels bump to `text-base font-medium`
+**UI placement -- below the textarea:**
+- Place a new button directly under the textarea, right-aligned
+- The button uses a purple/violet gradient background (`bg-gradient-to-r from-violet-500 to-purple-600`) with white text and a `Sparkles` icon from lucide-react
+- Shows a spinning loader while optimizing
+- Label: "AI Optimer tekst"
+- Disabled when text is empty or when already optimizing/generating
 
-**Buttons**:
-- "Upload stemme" button: use `size="lg"` with `h-12 px-6 text-base`
-- "Generer lydfil" button: make even larger (`h-14 text-lg rounded-xl`) as the primary CTA
-- Download button group: `size="lg"` with `h-12`
+This keeps the layout clean: textarea at top, AI button right below it as a utility action on the text, then settings, then the main generate button.
 
-**Audio output section**:
-- More padding, larger rounded corners (`rounded-xl p-6`)
-- Bigger label text
+### 3. Visual distinction for the AI button
 
-**Progress bar**:
-- Slightly taller (`h-4`) for better visibility
-
-**General spacing**:
-- Increase `space-y-6` to `space-y-8` for more breathing room between sections
-- Settings grid gap from `gap-4` to `gap-6`
-- Actions row gap from `gap-3` to `gap-4`
-
-### 3. `src/components/VoiceUploadModal.tsx` -- Consistent sizing
-- Make modal inputs taller (add `h-12` class)
-- Upload button uses `size="lg"`
-- More internal spacing
-
-### 4. `src/components/ui/button.tsx` -- Global button size adjustments
-- Default size: increase from `h-10` to `h-11`
-- `lg` size: increase from `h-11` to `h-12 px-8 text-base`
-- `icon` size: increase from `h-10 w-10` to `h-11 w-11`
-- Add `font-semibold` to all buttons for stronger presence
+- Purple/violet gradient background (clearly different from the blue primary theme)
+- `Sparkles` icon to signal AI functionality
+- Slightly smaller than the main CTA but still prominent
+- Hover state darkens the gradient
 
 ## Files changed
-- `src/index.css`
-- `src/pages/Index.tsx`
-- `src/components/VoiceUploadModal.tsx`
-- `src/components/ui/button.tsx`
+- `src/lib/api.ts` -- add `queryLlm()` function
+- `src/pages/Index.tsx` -- add state, handler, and AI button UI
 
 ## What stays the same
-- All functionality (API calls, state, logic)
-- Color palette (Region Nordjylland blue identity)
-- Dark mode support
-- Component structure
+- All existing functionality and layout structure
+- Color scheme for non-AI elements
+- API authentication pattern
 
