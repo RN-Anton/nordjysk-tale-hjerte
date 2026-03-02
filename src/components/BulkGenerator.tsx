@@ -396,7 +396,7 @@ const BulkGenerator = ({
           value={bulkText}
           onChange={(e) => setBulkText(e.target.value)}
         />
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 items-center justify-between">
           <button
             onClick={() => setBulkText("")}
             disabled={!bulkText.trim()}
@@ -405,22 +405,24 @@ const BulkGenerator = ({
             <X className="h-4 w-4" />
             Ryd
           </button>
-          <Button variant="outline" onClick={handleParseText} disabled={!bulkText.trim()}>
-            <FileText className="mr-2 h-4 w-4" />
-            Tilføj linjer
-          </Button>
-          <div>
-            <Input
-              ref={fileInputRef}
-              type="file"
-              accept=".txt,.csv,.docx"
-              className="hidden"
-              onChange={handleFileUpload}
-            />
-            <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="mr-2 h-4 w-4" />
-              Upload fil (.txt, .csv, .docx)
+          <div className="flex flex-wrap gap-3">
+            <Button variant="outline" onClick={handleParseText} disabled={!bulkText.trim()}>
+              <FileText className="mr-2 h-4 w-4" />
+              Tilføj linjer
             </Button>
+            <div>
+              <Input
+                ref={fileInputRef}
+                type="file"
+                accept=".txt,.csv,.docx"
+                className="hidden"
+                onChange={handleFileUpload}
+              />
+              <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="mr-2 h-4 w-4" />
+                Upload fil (.txt, .csv, .docx)
+              </Button>
+            </div>
           </div>
         </div>
       </div>
