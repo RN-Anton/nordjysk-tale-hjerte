@@ -1,6 +1,6 @@
-FROM node:20-slim AS build
+FROM node:18-alpine AS builder
 WORKDIR /app
-
+# Copy package files and install dependencies
 COPY package.json ./
 RUN npm install
 # Copy the rest of the frontend source
@@ -27,4 +27,3 @@ RUN find /usr/share/nginx/html/ -type d -print0 | xargs -0 chmod 755
 EXPOSE 80
 # Start Nginx
 CMD ["nginx", "-g", "daemon off;"]
-
