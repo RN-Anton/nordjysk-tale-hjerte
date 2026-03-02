@@ -22,6 +22,8 @@ const Index = () => {
   const [voice, setVoice] = useState("");
   const [language, setLanguage] = useState("");
   const [speed, setSpeed] = useState(1.0);
+  const [singleText, setSingleText] = useState("");
+  const [bulkText, setBulkText] = useState("");
   const [uploadOpen, setUploadOpen] = useState(false);
 
   useEffect(() => {
@@ -81,6 +83,18 @@ const Index = () => {
     onUploadClick: () => setUploadOpen(true),
   };
 
+  const singleProps = {
+    ...sharedProps,
+    text: singleText,
+    setText: setSingleText,
+  };
+
+  const bulkProps = {
+    ...sharedProps,
+    bulkText,
+    setBulkText,
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-primary text-primary-foreground">
@@ -113,10 +127,10 @@ const Index = () => {
                 <TabsTrigger value="bulk" className="flex-1">Bulk</TabsTrigger>
               </TabsList>
               <TabsContent value="single">
-                <SingleGenerator {...sharedProps} />
+                <SingleGenerator {...singleProps} />
               </TabsContent>
               <TabsContent value="bulk">
-                <BulkGenerator {...sharedProps} />
+                <BulkGenerator {...bulkProps} />
               </TabsContent>
             </Tabs>
           </CardContent>

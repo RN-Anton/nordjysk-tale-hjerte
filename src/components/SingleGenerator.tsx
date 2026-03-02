@@ -17,7 +17,7 @@ import {
   type Voice,
   type Language,
 } from "@/lib/api";
-import { Volume2, Download, Upload, Loader2, ChevronDown, Sparkles, Gauge } from "lucide-react";
+import { Volume2, Download, Upload, Loader2, ChevronDown, Sparkles, Gauge, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   DropdownMenu,
@@ -39,6 +39,8 @@ interface SingleGeneratorProps {
   setLanguage: (l: string) => void;
   speed: number;
   setSpeed: (s: number) => void;
+  text: string;
+  setText: (t: string) => void;
   onUploadClick: () => void;
 }
 
@@ -55,10 +57,11 @@ const SingleGenerator = ({
   setLanguage,
   speed,
   setSpeed,
+  text,
+  setText,
   onUploadClick,
 }: SingleGeneratorProps) => {
   const { toast } = useToast();
-  const [text, setText] = useState("");
   const [textError, setTextError] = useState("");
   const [generating, setGenerating] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
@@ -151,7 +154,13 @@ const SingleGenerator = ({
           <p className="text-sm font-medium text-destructive">{textError}</p>
         )}
         <div className="space-y-2">
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-2">
+            {text.trim() && (
+              <Button variant="ghost" size="sm" onClick={() => setText("")} disabled={optimizing || generating}>
+                <X className="mr-1 h-3.5 w-3.5" />
+                Ryd
+              </Button>
+            )}
             <button
               onClick={handleOptimize}
               disabled={!text.trim() || optimizing || generating}
