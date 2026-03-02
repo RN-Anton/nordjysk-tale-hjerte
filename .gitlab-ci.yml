@@ -1,0 +1,8 @@
+include:
+  - project: "iam/automation/templates/ci_cd-pipelines"
+    file: "/.gitlab-ci-docker-build-publish.yml"
+
+variables:
+  CI_PROJECT_NAME: $CI_PROJECT_NAME
+  DISABLE_GITLEAKS: "true"
+

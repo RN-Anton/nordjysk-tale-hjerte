@@ -1,9 +1,16 @@
 services:
-  tts-frontend:
-    build:
-      context: .
-      args:
-        - VITE_API_BASE_URL=http://your-backend-ip:8000
-        - VITE_API_KEY=your-secure-key
+  tts_frontend:
+    image: "${HARBOR_REGISTRY}/${REPOSITORY}:${IMAGE_TAG}"
     ports:
-      - "80:80"
+      - "4457:4457"
+    restart: unless-stopped
+    networks:
+      - frontend-network
+    mem_limit: 4g
+    cpus: 0.5
+
+networks:
+  frontend-network:
+    external: true
+    name: small_apps
+
