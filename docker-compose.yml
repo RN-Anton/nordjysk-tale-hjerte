@@ -5,12 +5,11 @@ services:
       - "4457:4457"
     restart: unless-stopped
     networks:
-      - frontend-network
+      - small_apps
     mem_limit: 4g
     cpus: 0.5
 
 networks:
-  frontend-network:
-    external: true
+  small_apps:
     name: small_apps
 
