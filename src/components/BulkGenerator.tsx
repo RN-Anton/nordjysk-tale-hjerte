@@ -397,6 +397,14 @@ const BulkGenerator = ({
           onChange={(e) => setBulkText(e.target.value)}
         />
         <div className="flex flex-wrap gap-3">
+          <button
+            onClick={() => setBulkText("")}
+            disabled={!bulkText.trim()}
+            className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-rose-400/60 to-red-500/60 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-rose-500 hover:to-red-600 disabled:pointer-events-none disabled:opacity-40"
+          >
+            <X className="h-4 w-4" />
+            Ryd
+          </button>
           <Button variant="outline" onClick={handleParseText} disabled={!bulkText.trim()}>
             <FileText className="mr-2 h-4 w-4" />
             Tilføj linjer
@@ -414,12 +422,6 @@ const BulkGenerator = ({
               Upload fil (.txt, .csv, .docx)
             </Button>
           </div>
-          {bulkText.trim() && (
-            <Button variant="ghost" onClick={() => setBulkText("")}>
-              <X className="mr-1 h-3.5 w-3.5" />
-              Ryd
-            </Button>
-          )}
         </div>
       </div>
 

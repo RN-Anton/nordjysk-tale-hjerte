@@ -154,13 +154,15 @@ const SingleGenerator = ({
           <p className="text-sm font-medium text-destructive">{textError}</p>
         )}
         <div className="space-y-2">
-          <div className="flex justify-end gap-2">
-            {text.trim() && (
-              <Button variant="ghost" size="sm" onClick={() => setText("")} disabled={optimizing || generating}>
-                <X className="mr-1 h-3.5 w-3.5" />
-                Ryd
-              </Button>
-            )}
+          <div className="flex justify-between gap-2">
+            <button
+              onClick={() => setText("")}
+              disabled={!text.trim() || optimizing || generating}
+              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-rose-400/60 to-red-500/60 px-4 py-2 text-sm font-semibold text-white shadow-md transition-all hover:from-rose-500 hover:to-red-600 disabled:pointer-events-none disabled:opacity-40"
+            >
+              <X className="h-4 w-4" />
+              Ryd
+            </button>
             <button
               onClick={handleOptimize}
               disabled={!text.trim() || optimizing || generating}
