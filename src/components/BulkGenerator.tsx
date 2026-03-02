@@ -196,11 +196,76 @@ const BulkGenerator = ({
     const trimmed = editText.trim();
     if (trimmed) {
       setLines((prev) =>
-        prev.map((l) => (l.id === id ? { ...l, text: trimmed } : l))
+        prev.map((l) => {
+          if (l.id !== id) return l;
+          if (l.audioUrl) URL.revokeObjectURL(l.audioUrl);
+          return { ...l, text: trimmed, status: "pending" as const, progress: 0, audioUrl: undefined, audioBlob: undefined };
+        })
       );
     }
     setEditingId(null);
     setEditText("");
+  };
+
+  const handleOptimizeSingle = async (lineId: string) => {
+    const line = lines.find((l) => l.id === lineId);
+    if (!line) return;
+    setLines((prev) =>
+      prev.map((l) => (l.id === lineId ? { ...l, status: "optimizing" as const, progress: 50 } : l))
+    );
+    try {
+      const optimized = await queryLlm(line.text);
+      setLines((prev) =>
+        prev.map((l) =>
+          l.id === lineId
+            ? { ...l, text: optimized, optimizedText: optimized, status: "pending" as const, progress: 0 }
+            : l
+        )
+      );
+    } catch {
+      setLines((prev) =>
+        prev.map((l) => (l.id === lineId ? { ...l, status: "pending" as const, progress: 0 } : l))
+      );
+      toast({ title: "Fejl", description: "Kunne ikke optimere teksten.", variant: "destructive" });
+    }
+  };
+
+  const handleGenerateSingle = async (lineId: string) => {
+    const line = lines.find((l) => l.id === lineId);
+    if (!line) return;
+    setLines((prev) =>
+      prev.map((l) => (l.id === lineId ? { ...l, status: "generating" as const, progress: 10 } : l))
+    );
+    const interval = setInterval(() => {
+      setLines((prev) =>
+        prev.map((l) =>
+          l.id === lineId && l.status === "generating"
+            ? { ...l, progress: Math.min(l.progress + 8, 90) }
+            : l
+        )
+      );
+    }, 300);
+    try {
+      const blob = await generateSpeech(line.text, voice, language, 0.5);
+      clearInterval(interval);
+      const url = URL.createObjectURL(blob);
+      setLines((prev) =>
+        prev.map((l) =>
+          l.id === lineId
+            ? { ...l, status: "done" as const, progress: 100, audioUrl: url, audioBlob: blob }
+            : l
+        )
+      );
+    } catch {
+      clearInterval(interval);
+      setLines((prev) =>
+        prev.map((l) =>
+          l.id === lineId
+            ? { ...l, status: "error" as const, progress: 0, error: "Generering fejlede" }
+            : l
+        )
+      );
+    }
   };
 
   const handleOptimizeAll = async () => {
@@ -481,6 +546,27 @@ const BulkGenerator = ({
                     </Button>
                   </div>
                 </div>
+
+                {/* Per-line actions */}
+                {editingId !== line.id && (line.status === "pending" || line.status === "done" || line.status === "error") && (
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => handleOptimizeSingle(line.id)}
+                      className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-violet-500 to-purple-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:from-violet-600 hover:to-purple-700"
+                    >
+                      <Sparkles className="h-3 w-3" />
+                      AI Optimer
+                    </button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleGenerateSingle(line.id)}
+                    >
+                      <Volume2 className="mr-1 h-3 w-3" />
+                      {line.status === "done" ? "Re-generer" : "Generer"}
+                    </Button>
+                  </div>
+                )}
 
                 {/* Progress */}
                 {(line.status === "generating" || line.status === "optimizing") && (
