@@ -80,7 +80,11 @@ async function parseFile(file: File): Promise<string[]> {
 
   if (ext === "txt") {
     const text = await file.text();
-    return parseLines(text);
+    // Split by single newlines so each line in the file becomes a voiceline
+    return text
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
 
   if (ext === "csv") {
@@ -96,7 +100,10 @@ async function parseFile(file: File): Promise<string[]> {
     const mammoth = await import("mammoth");
     const arrayBuffer = await file.arrayBuffer();
     const result = await mammoth.default.extractRawText({ arrayBuffer });
-    return parseLines(result.value);
+    return result.value
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
 
   throw new Error(`Filtype .${ext} understøttes ikke. Brug .txt, .csv eller .docx.`);
@@ -434,10 +441,26 @@ const BulkGenerator = ({
                 {line.status === "done" && line.audioUrl && (
                   <div className="space-y-2">
                     <audio controls src={line.audioUrl} className="w-full h-10" />
-                    <Button variant="outline" size="sm" onClick={() => handleDownloadSingle(line)}>
-                      <Download className="mr-2 h-3.5 w-3.5" />
-                      Download .{downloadFormat}
-                    </Button>
+                    <div className="flex items-center gap-0">
+                      <Button variant="outline" size="sm" className="rounded-r-none" onClick={() => handleDownloadSingle(line)}>
+                        <Download className="mr-2 h-3.5 w-3.5" />
+                        Download .{downloadFormat}
+                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="outline" size="sm" className="rounded-l-none border-l-0 px-2">
+                            <ChevronDown className="h-3.5 w-3.5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {["wav", "mp3", "au"].map((fmt) => (
+                            <DropdownMenuItem key={fmt} onClick={() => setDownloadFormat(fmt)}>
+                              .{fmt} {fmt === downloadFormat && "✓"}
+                            </DropdownMenuItem>
+                          ))}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 )}
 
