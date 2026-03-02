@@ -30,6 +30,8 @@ import {
   Play,
   Trash2,
   Gauge,
+  Pencil,
+  Check,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -133,6 +135,8 @@ const BulkGenerator = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [optimizingAll, setOptimizingAll] = useState(false);
   const [optimizeAllProgress, setOptimizeAllProgress] = useState(0);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editText, setEditText] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const addLines = useCallback((texts: string[]) => {
@@ -181,6 +185,22 @@ const BulkGenerator = ({
       if (line?.audioUrl) URL.revokeObjectURL(line.audioUrl);
       return prev.filter((l) => l.id !== id);
     });
+  };
+
+  const startEditing = (line: BulkLine) => {
+    setEditingId(line.id);
+    setEditText(line.text);
+  };
+
+  const saveEdit = (id: string) => {
+    const trimmed = editText.trim();
+    if (trimmed) {
+      setLines((prev) =>
+        prev.map((l) => (l.id === id ? { ...l, text: trimmed } : l))
+      );
+    }
+    setEditingId(null);
+    setEditText("");
   };
 
   const handleOptimizeAll = async () => {
@@ -412,9 +432,44 @@ const BulkGenerator = ({
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-muted-foreground mb-1">Linje {idx + 1}</p>
-                    <p className="text-sm leading-relaxed break-words">{line.text}</p>
+                    {editingId === line.id ? (
+                      <div className="space-y-2">
+                        <Textarea
+                          value={editText}
+                          onChange={(e) => setEditText(e.target.value)}
+                          className="text-sm min-h-[60px]"
+                          autoFocus
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              saveEdit(line.id);
+                            }
+                            if (e.key === "Escape") {
+                              setEditingId(null);
+                              setEditText("");
+                            }
+                          }}
+                        />
+                        <div className="flex gap-1">
+                          <Button variant="outline" size="sm" onClick={() => saveEdit(line.id)}>
+                            <Check className="mr-1 h-3 w-3" />
+                            Gem
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => { setEditingId(null); setEditText(""); }}>
+                            Annuller
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <p className="text-sm leading-relaxed break-words">{line.text}</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-1 shrink-0">
+                    {line.status !== "generating" && line.status !== "optimizing" && editingId !== line.id && (
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => startEditing(line)}>
+                        <Pencil className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                     {line.status === "done" && (
                       <span className="text-xs font-medium text-green-600 dark:text-green-400 mr-1">✓</span>
                     )}
