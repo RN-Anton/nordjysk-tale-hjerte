@@ -8,6 +8,8 @@ services:
       - frontend-network
     mem_limit: 4g
     cpus: 0.5
+    environment:
+      - API_KEY:${VITE_API_KEY}
 
 networks:
   frontend-network:
