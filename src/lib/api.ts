@@ -4,10 +4,8 @@ const BASE_URL = API_BASE_URL;
 const TTS_PREFIX = "/api/v1/tts";
 
 function validateConfig() {
-  if (!API_BASE_URL || !API_KEY) {
-    throw new Error(
-      `API config mangler: API_BASE_URL="${API_BASE_URL}", API_KEY="${API_KEY ? "***" : ""}". Opdatér src/config/config.ts.`
-    );
+  if (!API_KEY) {
+    console.warn("[TTS] ADVARSEL: API_KEY er ikke sat. Sæt VITE_API_KEY som miljøvariabel.");
   }
 }
 
