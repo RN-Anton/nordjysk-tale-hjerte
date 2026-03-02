@@ -1,39 +1,64 @@
 
 
-# Add Speed Slider (0.5x - 2.0x)
+# Inject API Key from GitLab CI/CD into the Docker Build
 
-## Overview
-Add a speed control slider to both the single and bulk generators, sending the `speed` parameter to the backend's `/api/v1/tts/generate` endpoint.
+## Current Setup
+Your `.gitlab-ci.yml` uses a shared organizational template (`/.gitlab-ci-docker-build-publish.yml`) that handles the Docker build internally. You don't write the `docker build` command yourself -- the template does it.
 
-## Changes
+## What Needs to Happen
 
-### 1. `src/lib/api.ts` -- Add `speed` parameter to `generateSpeech`
-- Add `speed: number = 1.0` as a fourth parameter
-- Include `speed` in the JSON payload sent to the backend
+### Step 1: Add CI/CD Variables in GitLab (done by you)
+In your GitLab project:
+1. Go to **Settings > CI/CD > Variables**
+2. Add `VITE_API_KEY` with your API key value -- mark it **Protected** and **Masked**
+3. Add `VITE_API_BASE_URL` with value `https://talebesked.ai.rn.dk/call` (optional, since the code will have this as default)
 
-### 2. `src/pages/Index.tsx` -- Shared speed state
-- Add `speed` state (default `1.0`) alongside existing `voice`/`language` state
-- Pass `speed` and `setSpeed` via `sharedProps` to both generators
+### Step 2: Pass variables as Docker build args in `.gitlab-ci.yml`
+Most shared CI templates support a `DOCKER_BUILD_ARGS` or `BUILD_ARGS` variable to forward extra arguments. Update your `.gitlab-ci.yml`:
 
-### 3. `src/components/SingleGenerator.tsx` -- Speed slider UI + usage
-- Add `speed` and `setSpeed` to the props interface
-- Add a slider row below the voice/language selects using the existing `Slider` component from `@/components/ui/slider`
-- Slider config: `min={0.5}`, `max={2}`, `step={0.25}`, showing the current value as a label (e.g. "1.0x")
-- Pass `speed` to the `generateSpeech` call
+```yaml
+include:
+  - project: "iam/automation/templates/ci_cd-pipelines"
+    file: "/.gitlab-ci-docker-build-publish.yml"
 
-### 4. `src/components/BulkGenerator.tsx` -- Same slider + usage
-- Add `speed` and `setSpeed` to the props interface
-- Add the same speed slider in the settings area
-- Pass `speed` to each `generateSpeech` call in the bulk queue
+variables:
+  CI_PROJECT_NAME: $CI_PROJECT_NAME
+  DISABLE_GITLEAKS: "true"
+  DOCKER_BUILD_ARGS: "--build-arg VITE_API_BASE_URL=$VITE_API_BASE_URL --build-arg VITE_API_KEY=$VITE_API_KEY"
+```
 
-## Slider UI
-- Placed in a new row below the voice/language grid (or as a third column on wide screens)
-- Label: "Hastighed" with the current value displayed (e.g. "1.0x")
-- Uses the existing Radix `Slider` component already in the project
+**Important**: The exact variable name (`DOCKER_BUILD_ARGS`, `BUILD_ARGS`, `BUILDARGS`, etc.) depends on what your shared template expects. You may need to check the template file at `iam/automation/templates/ci_cd-pipelines/.gitlab-ci-docker-build-publish.yml` to find the correct variable name. Ask your DevOps team if unsure.
 
-## Files changed
-- `src/lib/api.ts`
-- `src/pages/Index.tsx`
-- `src/components/SingleGenerator.tsx`
-- `src/components/BulkGenerator.tsx`
+### Step 3: Code changes (2 files)
+
+**`src/config/config.ts`** -- Read from Vite env vars with sensible defaults:
+```ts
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "https://talebesked.ai.rn.dk/call";
+export const API_KEY = import.meta.env.VITE_API_KEY || "";
+```
+
+**`src/lib/api.ts`** -- Soften validation so it warns instead of throwing:
+- Remove the hard throw when `API_BASE_URL` is empty (it now has a default)
+- Change `API_KEY` check to a `console.warn` instead of throwing an error
+
+### No changes to Dockerfile
+Your `Dockerfile` already declares `ARG VITE_API_KEY` and sets it as an env var during build. This is correct and stays as-is.
+
+## How the flow works
+
+```text
+GitLab CI/CD Variable (VITE_API_KEY=secret123)
+        |
+  .gitlab-ci.yml passes it as --build-arg
+        |
+  Dockerfile: ARG VITE_API_KEY --> ENV VITE_API_KEY
+        |
+  Vite embeds it into the JS bundle at build time
+        |
+  config.ts reads import.meta.env.VITE_API_KEY
+        |
+  api.ts sends it as X-API-Key header
+```
+
+The API key never appears in your source code or Git history.
 
