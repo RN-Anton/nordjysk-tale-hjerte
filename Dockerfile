@@ -1,5 +1,12 @@
 FROM node:18-alpine AS builder
 WORKDIR /app
+
+ARG VITE_API_BASE_URL
+ARG VITE_API_KEY
+
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_API_KEY=$VITE_API_KEY
+
 # Copy package files and install dependencies
 COPY package.json ./
 RUN npm install
