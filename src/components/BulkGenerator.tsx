@@ -32,6 +32,7 @@ import {
   Gauge,
   Pencil,
   Check,
+  X,
 } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
@@ -55,6 +56,8 @@ interface BulkGeneratorProps {
   setLanguage: (l: string) => void;
   speed: number;
   setSpeed: (s: number) => void;
+  bulkText: string;
+  setBulkText: (t: string) => void;
   onUploadClick: () => void;
 }
 
@@ -126,10 +129,11 @@ const BulkGenerator = ({
   setLanguage,
   speed,
   setSpeed,
+  bulkText,
+  setBulkText,
   onUploadClick,
 }: BulkGeneratorProps) => {
   const { toast } = useToast();
-  const [bulkText, setBulkText] = useState("");
   const [lines, setLines] = useState<BulkLine[]>([]);
   const [downloadFormat, setDownloadFormat] = useState("wav");
   const [isProcessing, setIsProcessing] = useState(false);
@@ -410,6 +414,12 @@ const BulkGenerator = ({
               Upload fil (.txt, .csv, .docx)
             </Button>
           </div>
+          {bulkText.trim() && (
+            <Button variant="ghost" onClick={() => setBulkText("")}>
+              <X className="mr-1 h-3.5 w-3.5" />
+              Ryd
+            </Button>
+          )}
         </div>
       </div>
 
