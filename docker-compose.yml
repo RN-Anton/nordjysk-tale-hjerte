@@ -2,7 +2,7 @@ services:
   tts_frontend:
     image: "${HARBOR_REGISTRY}/${REPOSITORY}:${IMAGE_TAG}"
     ports:
-      - "4457:4457"
+      - "4457:80"
     restart: unless-stopped
     networks:
       - frontend-network
