@@ -42,10 +42,11 @@ export default function VoiceUploadModal({
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0];
-    if (selected && !selected.name.endsWith(".wav")) {
+    const allowedExts = [".wav", ".mp3", ".au", ".ogg", ".flac", ".aac", ".wma", ".m4a", ".aiff", ".webm"];
+    if (selected && !allowedExts.some(ext => selected.name.toLowerCase().endsWith(ext))) {
       toast({
         title: "Ugyldig filtype",
-        description: "Kun .wav filer er tilladt.",
+        description: `Tilladte filtyper: ${allowedExts.join(", ")}`,
         variant: "destructive",
       });
       e.target.value = "";
@@ -90,7 +91,7 @@ export default function VoiceUploadModal({
         <DialogHeader>
           <DialogTitle>Upload ny stemme</DialogTitle>
           <DialogDescription>
-            Upload en .wav-fil for at tilføje en ny stemme til systemet.
+            Upload en lydfil for at tilføje en ny stemme til systemet.
           </DialogDescription>
         </DialogHeader>
 
@@ -123,11 +124,11 @@ export default function VoiceUploadModal({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="voice-file">Lydfil (.wav)</Label>
+            <Label htmlFor="voice-file">Lydfil</Label>
             <Input
               id="voice-file"
               type="file"
-              accept=".wav"
+              accept=".wav,.mp3,.au,.ogg,.flac,.aac,.wma,.m4a,.aiff,.webm"
               onChange={handleFileChange}
             />
           </div>
