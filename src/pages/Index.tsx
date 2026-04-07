@@ -137,12 +137,12 @@ const Index = () => {
         </Card>
       </main>
 
-      <VoiceUploadModal
+      {/* <VoiceUploadModal
         open={uploadOpen}
         onOpenChange={setUploadOpen}
         languages={languages}
         onSuccess={refreshVoices}
-      />
+      /> */}
     </div>
   );
 };

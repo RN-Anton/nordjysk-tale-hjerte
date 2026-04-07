@@ -6,7 +6,7 @@ const TTS_PREFIX = "/api/v1/tts";
 function validateConfig() {
   if (!API_BASE_URL || !API_KEY) {
     throw new Error(
-      `API config mangler: API_BASE_URL="${API_BASE_URL}", API_KEY="${API_KEY ? "***" : ""}". Opdatér src/config/config.ts.`
+      `API config mangler: API_BASE_URL="${API_BASE_URL}", API_KEY="${API_KEY ? "***" : ""}". Opdatér src/config/config.ts`
     );
   }
 }

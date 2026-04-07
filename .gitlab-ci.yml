@@ -6,3 +6,6 @@ variables:
   CI_PROJECT_NAME: $CI_PROJECT_NAME
   DISABLE_GITLEAKS: "true"
 
+before_script:
+  - echo "OSUSER=$OSUSER" > .env
+  - echo "OSPASSWORD=$OSPASSWORD" >> .env
