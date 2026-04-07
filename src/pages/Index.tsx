@@ -100,6 +100,9 @@ const Index = () => {
               Region Nordjylland
             </p>
           </div>
+          <Button variant="ghost" size="icon" className="text-primary-foreground hover:text-primary-foreground/80" onClick={() => navigate("/admin")} title="Admin">
+            <Settings className="h-5 w-5" />
+          </Button>
           <ThemeToggle />
         </div>
       </header>
