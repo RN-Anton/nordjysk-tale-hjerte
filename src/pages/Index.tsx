@@ -1,14 +1,16 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import rnLogo from "@/assets/rn-logo.png";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { fetchVoices, fetchLanguages, type Voice, type Language } from "@/lib/api";
 
 import SingleGenerator from "@/components/SingleGenerator";
 import BulkGenerator from "@/components/BulkGenerator";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Volume2 } from "lucide-react";
+import { Volume2, Settings } from "lucide-react";
 
 const Index = () => {
   const { toast } = useToast();
