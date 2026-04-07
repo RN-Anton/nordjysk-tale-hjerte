@@ -1,28 +1,49 @@
 
+Fix the broken removal by cleaning up the last leftover voice-upload references in `src/pages/Index.tsx`.
 
-# Remove "Upload stemme" Button
+## What to change
 
-Remove the voice upload button and modal from the entire application.
+1. Remove the unused refresh callback
+- Delete `refreshVoices`, since it only existed for the upload modal success flow.
+- This also removes dead code around selecting a newly uploaded voice.
 
-## Changes
+2. Remove the lingering modal render
+- Delete the `<VoiceUploadModal ... />` block at the bottom of `Index.tsx`.
+- This is the direct cause of the current runtime and TypeScript errors:
+  - `VoiceUploadModal is not defined`
+  - `uploadOpen is not defined`
+  - `setUploadOpen is not defined`
 
-### 1. `src/components/SingleGenerator.tsx`
-- Remove `onUploadClick` from props interface and destructuring
-- Remove the "Upload stemme" `<Button>` (lines 220-223)
-- Remove `Upload` icon import if no longer used
+3. Keep the rest of the page intact
+- Leave `SingleGenerator` and `BulkGenerator` usage unchanged.
+- Keep voice/language fetching and the shared props as they are.
 
-### 2. `src/components/BulkGenerator.tsx`
-- Remove `onUploadClick` from props interface and destructuring
-- Remove the "Upload stemme" button in bulk actions (lines 479-482)
-- Remove the "Upload stemme" button in empty state (lines 661-664)
-- Remove `Upload` icon import if no longer used
+## Expected result
 
-### 3. `src/pages/Index.tsx`
-- Remove `uploadOpen` state and `setUploadOpen`
-- Remove `onUploadClick` from `sharedProps`
-- Remove `<VoiceUploadModal>` component and its import
-- Remove `VoiceUploadModal` import
+- The page builds again without the `VoiceUploadModal` reference errors.
+- The “Upload stemme” button remains removed from the app.
+- No upload modal is rendered anywhere from the index page.
 
-### 4. Delete `src/components/VoiceUploadModal.tsx`
-- No longer needed
+## Technical details
 
+Current issue in `src/pages/Index.tsx`:
+```text
+<VoiceUploadModal
+  open={uploadOpen}
+  onOpenChange={setUploadOpen}
+  languages={languages}
+  onSuccess={refreshVoices}
+/>
+```
+
+Those identifiers no longer exist, but this JSX block was left behind.
+
+After cleanup, the component should end right after `</main>` and return:
+```text
+    </div>
+  );
+};
+```
+
+## Note on the console warning
+There is also a separate existing warning in `BulkGenerator` about refs and `Select`. That is unrelated to this build failure and should be handled as a follow-up task after the `Index.tsx` cleanup restores the app.
