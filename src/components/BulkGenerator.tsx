@@ -131,7 +131,7 @@ const BulkGenerator = ({
   setSpeed,
   bulkText,
   setBulkText,
-  onUploadClick,
+  
 }: BulkGeneratorProps) => {
   const { toast } = useToast();
   const [lines, setLines] = useState<BulkLine[]>([]);
@@ -476,10 +476,8 @@ const BulkGenerator = ({
 
           {/* Bulk actions */}
           <div className="flex flex-wrap gap-3">
-            <Button variant="outline" size="lg" onClick={onUploadClick}>
-              <Upload className="mr-2 h-4 w-4" />
-              Upload stemme
-            </Button>
+
+
             <button
               onClick={handleOptimizeAll}
               disabled={optimizingAll || isProcessing || lines.filter((l) => l.status === "pending" || l.status === "done").length === 0}
@@ -656,14 +654,8 @@ const BulkGenerator = ({
       )}
 
       {/* Empty state when no lines added */}
-      {lines.length === 0 && (
-        <div className="flex flex-col gap-4 sm:flex-row">
-          <Button variant="outline" size="lg" onClick={onUploadClick}>
-            <Upload className="mr-2 h-4 w-4" />
-            Upload stemme
-          </Button>
-        </div>
-      )}
+
+
     </div>
   );
 };

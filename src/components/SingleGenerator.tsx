@@ -41,7 +41,7 @@ interface SingleGeneratorProps {
   setSpeed: (s: number) => void;
   text: string;
   setText: (t: string) => void;
-  onUploadClick: () => void;
+  
 }
 
 const SingleGenerator = ({
@@ -59,7 +59,7 @@ const SingleGenerator = ({
   setSpeed,
   text,
   setText,
-  onUploadClick,
+  
 }: SingleGeneratorProps) => {
   const { toast } = useToast();
   const [textError, setTextError] = useState("");
@@ -217,10 +217,8 @@ const SingleGenerator = ({
 
       {/* Actions */}
       <div className="flex flex-col gap-4 sm:flex-row">
-        <Button variant="outline" size="lg" onClick={onUploadClick}>
-          <Upload className="mr-2 h-4 w-4" />
-          Upload stemme
-        </Button>
+
+
         <Button
           className="flex-1 h-14 text-lg rounded-xl"
           size="lg"
