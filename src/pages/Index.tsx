@@ -13,6 +13,7 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 import { Volume2, Settings } from "lucide-react";
 
 const Index = () => {
+  const navigate = useNavigate();
   const { toast } = useToast();
 
   const [voices, setVoices] = useState<Voice[]>([]);
