@@ -126,17 +126,55 @@ export async function queryLlm(userQuery: string): Promise<string> {
 export async function uploadVoice(
   name: string,
   language: string,
-  file: File
+  file: File,
+  token?: string
 ): Promise<void> {
   const formData = new FormData();
   formData.append("voice_name", name);
   formData.append("language", language);
   formData.append("voice_file", file);
 
+  const h: Record<string, string> = { ...headers() };
+  if (token) h["Authorization"] = `Bearer ${token}`;
+
   const res = await fetch(`${BASE_URL}${TTS_PREFIX}/voices/upload`, {
     method: "POST",
-    headers: headers(),
+    headers: h,
     body: formData,
   });
   if (!res.ok) throw new Error("Kunne ikke uploade stemme");
+}
+
+// ---- Admin: AD-group endpoints ----
+
+export interface AdGroup {
+  id: string;
+  name: string;
+}
+
+export async function fetchAdGroups(token: string): Promise<AdGroup[]> {
+  const res = await fetch(`${BASE_URL}${TTS_PREFIX}/ad-groups`, {
+    headers: { ...headers(), Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Kunne ikke hente AD-grupper");
+  const data = await res.json();
+  return data.groups ?? data;
+}
+
+export async function fetchVoiceAccessGroup(token: string): Promise<string> {
+  const res = await fetch(`${BASE_URL}${TTS_PREFIX}/ad-groups/voice-access`, {
+    headers: { ...headers(), Authorization: `Bearer ${token}` },
+  });
+  if (!res.ok) throw new Error("Kunne ikke hente stemmeadgang");
+  const data = await res.json();
+  return data.group_id ?? "";
+}
+
+export async function setVoiceAccessGroup(token: string, groupId: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}${TTS_PREFIX}/ad-groups/voice-access`, {
+    method: "PUT",
+    headers: { ...headers(), Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ group_id: groupId }),
+  });
+  if (!res.ok) throw new Error("Kunne ikke opdatere stemmeadgang");
 }
