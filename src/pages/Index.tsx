@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { fetchVoices, fetchLanguages, type Voice, type Language } from "@/lib/api";
-import VoiceUploadModal from "@/components/VoiceUploadModal";
+
 import SingleGenerator from "@/components/SingleGenerator";
 import BulkGenerator from "@/components/BulkGenerator";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -24,7 +24,7 @@ const Index = () => {
   const [speed, setSpeed] = useState(1.0);
   const [singleText, setSingleText] = useState("");
   const [bulkText, setBulkText] = useState("");
-  const [uploadOpen, setUploadOpen] = useState(false);
+  
 
   useEffect(() => {
     fetchVoices()
@@ -80,7 +80,7 @@ const Index = () => {
     setLanguage,
     speed,
     setSpeed,
-    onUploadClick: () => setUploadOpen(true),
+    
   };
 
   const singleProps = {
@@ -137,12 +137,8 @@ const Index = () => {
         </Card>
       </main>
 
-      <VoiceUploadModal
-        open={uploadOpen}
-        onOpenChange={setUploadOpen}
-        languages={languages}
-        onSuccess={refreshVoices}
-      />
+
+
     </div>
   );
 };
