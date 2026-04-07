@@ -58,7 +58,7 @@ interface BulkGeneratorProps {
   setSpeed: (s: number) => void;
   bulkText: string;
   setBulkText: (t: string) => void;
-  onUploadClick: () => void;
+  
 }
 
 interface BulkLine {

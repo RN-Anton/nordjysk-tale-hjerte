@@ -17,7 +17,7 @@ import {
   type Voice,
   type Language,
 } from "@/lib/api";
-import { Volume2, Download, Upload, Loader2, ChevronDown, Sparkles, Gauge, X } from "lucide-react";
+import { Volume2, Download, Loader2, ChevronDown, Sparkles, Gauge, X } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import {
   DropdownMenu,
