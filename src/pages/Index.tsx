@@ -55,17 +55,6 @@ const Index = () => {
       .finally(() => setLanguagesLoading(false));
   }, []);
 
-  const refreshVoices = (voiceName?: string) => {
-    fetchVoices()
-      .then((v) => {
-        setVoices(v);
-        if (voiceName) {
-          const match = v.find((voice) => voice.name === voiceName);
-          if (match) setVoice(match.id);
-        }
-      })
-      .catch(() => {});
-  };
 
   const sharedProps = {
     voices,
@@ -137,12 +126,6 @@ const Index = () => {
         </Card>
       </main>
 
-      <VoiceUploadModal
-        open={uploadOpen}
-        onOpenChange={setUploadOpen}
-        languages={languages}
-        onSuccess={refreshVoices}
-      />
     </div>
   );
 };
