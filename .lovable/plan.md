@@ -1,27 +1,20 @@
 
 
-# Fix Dockerfile: Alpine Linux Compatibility
+# Fix: Align Build Args with Actual GitLab Variables
 
 ## Problem
-Two issues on lines 37-38:
-1. **`useradd` doesn't exist in Alpine Linux** — Alpine uses `adduser` instead
-2. **`/app` doesn't exist in the nginx stage** — `/app` was only in the builder stage; the nginx stage serves from `/usr/share/nginx/html`
+The Dockerfile and `.gitlab-ci.yml` reference `TTS_BACKEND_CLIENT_ID` and `TTS_BACKEND_TENANT_ID`, but the actual GitLab CI/CD variables you added are named `VITE_CLIENT_ID` and `VITE_TENANT_ID`. The build args are empty because the names don't match.
 
-Also, running nginx as a non-root user on port 80 requires extra config. Since this is an internal tool, the non-root user block can simply be removed — nginx:alpine already runs worker processes as `nginx` user.
+## Changes
 
-## Change
+### 1. `.gitlab-ci.yml` — Update `DOCKER_BUILD_ARGS`
+Replace `TTS_BACKEND_CLIENT_ID` → `VITE_CLIENT_ID` and `TTS_BACKEND_TENANT_ID` → `VITE_TENANT_ID` in the build args string.
 
-**`Dockerfile`** — Remove lines 36-41 (the non-root user block entirely). The `useradd` + `/app` reference is broken, and nginx needs root to bind port 80. The security benefit is minimal for an internal container.
+### 2. `Dockerfile` — Update ARG/ENV mapping
+- Change `ARG TTS_BACKEND_CLIENT_ID` → `ARG VITE_CLIENT_ID`
+- Change `ARG TTS_BACKEND_TENANT_ID` → `ARG VITE_TENANT_ID`
+- Change `ENV VITE_AZURE_CLIENT_ID=$TTS_BACKEND_CLIENT_ID` → `ENV VITE_AZURE_CLIENT_ID=$VITE_CLIENT_ID`
+- Change `ENV VITE_AZURE_TENANT_ID=$TTS_BACKEND_TENANT_ID` → `ENV VITE_AZURE_TENANT_ID=$VITE_TENANT_ID`
 
-Lines to remove:
-```dockerfile
-# 🔐 Create non-root user for security
-RUN useradd --create-home --shell /usr/sbin/nologin appuser \
-    && chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
-```
-
-This will fix the build failure immediately.
+No other files change. The frontend code already reads `VITE_AZURE_CLIENT_ID` / `VITE_AZURE_TENANT_ID` correctly.
 
