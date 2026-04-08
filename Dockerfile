@@ -33,10 +33,13 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 RUN find /usr/share/nginx/html/ -type f -name "*" -print0 | xargs -0 chmod 644
 RUN find /usr/share/nginx/html/ -type d -print0 | xargs -0 chmod 755
 
+# Configure nginx to run as non-root
+RUN sed -i '/^user /d' /etc/nginx/nginx.conf \
+    && sed -i 's|/var/run/nginx.pid|/tmp/nginx.pid|' /etc/nginx/nginx.conf \
+    && chown -R nginx:nginx /var/cache/nginx /var/log/nginx /etc/nginx/conf.d \
+    && chmod -R 755 /var/cache/nginx /var/log/nginx
 
-# Optional: SPA routing fix
-# COPY nginx.conf /etc/nginx/conf.d/default.conf
-# Expose port 80 for Nginx
-EXPOSE 80
-# Start Nginx
+USER nginx
+
+EXPOSE 8080
 CMD ["nginx", "-g", "daemon off;"]
