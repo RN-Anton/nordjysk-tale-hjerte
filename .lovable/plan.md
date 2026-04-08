@@ -1,62 +1,48 @@
 
 
-# Admin Panel with OIDC/SSO Authentication
+# Landing Page with Login Gate and Admin-Conditional UI
 
 ## Overview
-Add a protected admin page at `/admin` with OIDC/SSO login (Azure AD). The admin panel provides two features: voice upload and AD group permission management. The frontend will call backend endpoints that you'll add to the TTS backend later.
+Replace the current direct-to-app flow with a landing page that requires Azure AD login. After login, check admin status via `/auth/me`. Non-admins see the TTS tool without the admin button; admins see the Settings icon to access the admin panel.
 
-## Expected Backend Endpoints (for you to implement later)
+## Changes
 
-| Endpoint | Method | Purpose |
-|---|---|---|
-| `/auth/me` | GET | Returns `{ isAuthenticated, isAdmin, user }` based on Bearer token |
-| `/api/v1/tts/voices/upload` | POST | Already exists -- upload a voice file |
-| `/api/v1/tts/ad-groups` | GET | Returns list of available AD groups |
-| `/api/v1/tts/ad-groups/voice-access` | GET | Returns currently selected AD group for voice access |
-| `/api/v1/tts/ad-groups/voice-access` | PUT | Sets which AD group has voice access |
+### 1. New Landing Page (`src/pages/Landing.tsx`)
+- Full-screen page with the same primary color header/branding as Index
+- Region Nordjylland logo, "Velkommen til Regional Tekst-til-Tale Service" heading
+- Single "Log ind" button that triggers MSAL login popup
+- On successful login, navigate to `/` (the main app)
+- Uses same theme colors/ThemeToggle
 
-All admin endpoints expect a Bearer token in the Authorization header.
+### 2. Update Routing (`src/App.tsx`)
+- Add new route: `/login` renders `Landing`
+- `/` still renders `Index` (but Index now gates on authentication)
 
-## Frontend Changes
+### 3. Update Index Page (`src/pages/Index.tsx`)
+- On mount: check if MSAL has an active account. If not, redirect to `/login`.
+- After confirming authentication, call `fetchAuthMe(token)` to get admin status.
+- Store `isAdmin` in local state.
+- Conditionally render the Settings (admin panel) button only when `isAdmin === true`.
+- Remove the Settings button for non-admin users entirely.
+- Show a loading spinner while the auth check is in progress.
 
-### 1. Auth library and OIDC config
-- Add `@azure/msal-browser` and `@azure/msal-react` for Azure AD SSO
-- Create `src/config/auth.ts` with MSAL config reading from `VITE_AZURE_CLIENT_ID`, `VITE_AZURE_TENANT_ID`, and `VITE_AZURE_REDIRECT_URI` env vars
-- Wrap the app in `MsalProvider` in `App.tsx`
+### 4. Auth helper update (`src/lib/auth.ts`)
+- Remove `X-API-Key` from the `/auth/me` call (backend says it's not required for this endpoint).
 
-### 2. Auth context (`src/lib/auth.ts`)
-- Helper to acquire a token silently from MSAL
-- `fetchAuthMe(token)` function that calls `GET /auth/me` with the Bearer token
-- Returns user info and admin status
+## Flow
 
-### 3. API additions (`src/lib/api.ts`)
-- `fetchAdGroups(token)` -- calls `GET /api/v1/tts/ad-groups`
-- `fetchVoiceAccessGroup(token)` -- calls `GET /api/v1/tts/ad-groups/voice-access`
-- `setVoiceAccessGroup(token, groupId)` -- calls `PUT /api/v1/tts/ad-groups/voice-access`
-- Re-export existing `uploadVoice` (already in api.ts)
-
-### 4. Admin page (`src/pages/Admin.tsx`)
-- On mount: acquire token silently, call `/auth/me`
-- If not authenticated: show "Log ind" button triggering MSAL login popup
-- If authenticated but not admin: show "Ingen adgang" message
-- If admin, show two card sections:
-
-**Voice Upload card** -- reuses the upload form (name, language, file) previously in VoiceUploadModal, now inline on the page.
-
-**AD Group Access card** -- fetches available AD groups from backend, shows a Select dropdown of groups, displays the currently selected group, and a "Gem" (Save) button to update the selection.
-
-### 5. Routing (`src/App.tsx`)
-- Add `<Route path="/admin" element={<Admin />} />`
-
-### 6. Navigation
-- Add an "Admin" link/icon in the header of `Index.tsx` that navigates to `/admin`
-- Admin page gets a "Tilbage" (Back) link to return to `/`
+```text
+User visits /
+  → No MSAL account? → Redirect to /login (Landing page)
+  → "Log ind" button → MSAL popup → On success → Navigate to /
+  → Index mounts → acquireToken → fetchAuthMe
+    → isAdmin=true  → show Settings icon + TTS tool
+    → isAdmin=false → show TTS tool only (no Settings icon)
+```
 
 ## Technical Details
-
-- MSAL handles the OIDC token exchange with Azure AD
-- The token is passed as `Authorization: Bearer <token>` to all admin API calls
-- The existing `X-API-Key` header continues to be sent alongside the Bearer token
-- Config values (`VITE_AZURE_CLIENT_ID`, `VITE_AZURE_TENANT_ID`) will be empty in dev but injected at build time via CI/CD, same pattern as `VITE_API_KEY`
-- When backend endpoints aren't ready yet, the UI will show appropriate error messages from failed fetches
+- MSAL `instance.getAllAccounts()` is used to check if user is logged in
+- The `useMsal` and `useIsAuthenticated` hooks from `@azure/msal-react` handle reactivity
+- Landing page uses `instance.loginPopup(loginRequest)` for the login flow
+- No changes to the Admin page itself -- it already has its own auth gating
 
