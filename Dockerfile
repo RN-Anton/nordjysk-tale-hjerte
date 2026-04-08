@@ -32,6 +32,14 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Set permissions for files within the public folder
 RUN find /usr/share/nginx/html/ -type f -name "*" -print0 | xargs -0 chmod 644
 RUN find /usr/share/nginx/html/ -type d -print0 | xargs -0 chmod 755
+
+# 🔐 Create non-root user for security
+RUN useradd --create-home --shell /usr/sbin/nologin appuser \
+    && chown -R appuser:appuser /app
+
+# Switch to non-root user
+USER appuser
+
 # Optional: SPA routing fix
 # COPY nginx.conf /etc/nginx/conf.d/default.conf
 # Expose port 80 for Nginx
