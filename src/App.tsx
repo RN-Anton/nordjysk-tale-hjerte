@@ -8,6 +8,7 @@ import { MsalProvider } from "@azure/msal-react";
 import { msalConfig } from "@/config/auth";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
+import Landing from "./pages/Landing";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -21,6 +22,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            <Route path="/login" element={<Landing />} />
             <Route path="/" element={<Index />} />
             <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

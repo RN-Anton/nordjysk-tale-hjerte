@@ -1,20 +1,26 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import rnLogo from "@/assets/rn-logo.png";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { fetchVoices, fetchLanguages, type Voice, type Language } from "@/lib/api";
+import { acquireToken, fetchAuthMe } from "@/lib/auth";
 
 import SingleGenerator from "@/components/SingleGenerator";
 import BulkGenerator from "@/components/BulkGenerator";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Volume2, Settings } from "lucide-react";
+import { Volume2, Settings, Loader2 } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { instance } = useMsal();
+  const isAuthenticated = useIsAuthenticated();
   const { toast } = useToast();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
   const [voices, setVoices] = useState<Voice[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -28,6 +34,29 @@ const Index = () => {
   const [singleText, setSingleText] = useState("");
   const [bulkText, setBulkText] = useState("");
   
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/login", { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
+
+  // Check admin status
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    setAuthLoading(true);
+    acquireToken(instance)
+      .then((token) => {
+        if (!token) return;
+        return fetchAuthMe(token);
+      })
+      .then((res) => {
+        if (res) setIsAdmin(res.isAdmin);
+      })
+      .catch((err) => console.error("[Auth] admin check failed:", err))
+      .finally(() => setAuthLoading(false));
+  }, [isAuthenticated, instance]);
 
   useEffect(() => {
     fetchVoices()
@@ -87,6 +116,14 @@ const Index = () => {
     setBulkText,
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b bg-primary text-primary-foreground">
@@ -100,9 +137,11 @@ const Index = () => {
               Region Nordjylland
             </p>
           </div>
-          <Button variant="ghost" size="icon" className="text-primary-foreground hover:text-primary-foreground/80" onClick={() => navigate("/admin")} title="Admin">
-            <Settings className="h-5 w-5" />
-          </Button>
+          {isAdmin && (
+            <Button variant="ghost" size="icon" className="text-primary-foreground hover:text-primary-foreground/80" onClick={() => navigate("/admin")} title="Admin">
+              <Settings className="h-5 w-5" />
+            </Button>
+          )}
           <ThemeToggle />
         </div>
       </header>

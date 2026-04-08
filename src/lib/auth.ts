@@ -1,6 +1,6 @@
 import { IPublicClientApplication } from "@azure/msal-browser";
 import { loginRequest } from "@/config/auth";
-import { API_BASE_URL, API_KEY } from "@/config/config";
+import { API_BASE_URL } from "@/config/config";
 
 export interface AuthUser {
   sub?: string;
@@ -48,7 +48,6 @@ export async function fetchAuthMe(token: string): Promise<AuthMeResponse> {
   const res = await fetch(`${API_BASE_URL}/auth/me`, {
     headers: {
       Authorization: `Bearer ${token}`,
-      "X-API-Key": API_KEY,
     },
   });
 
