@@ -33,13 +33,16 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf
 RUN find /usr/share/nginx/html/ -type f -name "*" -print0 | xargs -0 chmod 644
 RUN find /usr/share/nginx/html/ -type d -print0 | xargs -0 chmod 755
 
-# Configure nginx to run as non-root
-RUN sed -i '/^user /d' /etc/nginx/nginx.conf \
+# Configure nginx to run as non-root on port 80
+RUN apk add --no-cache libcap \
+    && setcap 'cap_net_bind_service=+ep' /usr/sbin/nginx \
+    && apk del libcap \
+    && sed -i '/^user /d' /etc/nginx/nginx.conf \
     && sed -i 's|/run/nginx.pid|/tmp/nginx.pid|' /etc/nginx/nginx.conf \
     && chown -R nginx:nginx /var/cache/nginx /var/log/nginx /etc/nginx/conf.d \
     && chmod -R 755 /var/cache/nginx /var/log/nginx
 
 USER nginx
 
-EXPOSE 8080
+EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
