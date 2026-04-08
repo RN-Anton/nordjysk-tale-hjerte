@@ -22,14 +22,12 @@
   <body>
     <div id="root"></div>
     <script>
-      // Diagnostic: check if Azure env vars were baked in at build time
-      document.addEventListener('DOMContentLoaded', function() {
-        var tag = document.querySelector('meta[name="x-diag-client-id"]');
-        var val = tag ? tag.content : '(meta tag missing)';
-        console.log('[DIAG] VITE_AZURE_CLIENT_ID = ' + (val && val !== '__EMPTY__' ? val.substring(0,8) + '...' : 'NOT SET'));
-      });
+      // Runtime env injection — nginx envsubst replaces $VITE_CLIENT_ID at container startup
+      window.VITE_CLIENT_ID = "${VITE_CLIENT_ID}";
+      window.VITE_TENANT_ID = "${VITE_TENANT_ID}";
+      console.log("[RUNTIME] VITE_CLIENT_ID:", window.VITE_CLIENT_ID ? window.VITE_CLIENT_ID.substring(0,8) + "..." : "NOT SET");
+      console.log("[RUNTIME] VITE_TENANT_ID:", window.VITE_TENANT_ID ? window.VITE_TENANT_ID.substring(0,8) + "..." : "NOT SET");
     </script>
-    <meta name="x-diag-client-id" content="%VITE_AZURE_CLIENT_ID%" />
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

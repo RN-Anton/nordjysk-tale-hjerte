@@ -1,14 +1,26 @@
 import { PublicClientApplication, Configuration } from "@azure/msal-browser";
 
-console.log("VITE_CLIENT_ID:", import.meta.env.VITE_CLIENT_ID);
-console.log("VITE_TENANT_ID:", import.meta.env.VITE_TENANT_ID);
-console.log("All env vars:", import.meta.env);
+declare global {
+  interface Window {
+    VITE_CLIENT_ID?: string;
+    VITE_TENANT_ID?: string;
+  }
+}
+
+function getClientId(): string {
+  return (window.VITE_CLIENT_ID || import.meta.env.VITE_CLIENT_ID || "") as string;
+}
+
+function getTenantId(): string {
+  return (window.VITE_TENANT_ID || import.meta.env.VITE_TENANT_ID || "") as string;
+}
 
 function createMsalInstance() {
-  const clientId = import.meta.env.VITE_CLIENT_ID as string;
-  const tenantId = import.meta.env.VITE_TENANT_ID as string;
+  const clientId = getClientId();
+  const tenantId = getTenantId();
 
-  console.log("Creating MSAL with clientId:", clientId, "tenantId:", tenantId);
+  console.log("Creating MSAL with clientId:", clientId ? clientId.substring(0, 8) + "..." : "MISSING");
+  console.log("Creating MSAL with tenantId:", tenantId ? tenantId.substring(0, 8) + "..." : "MISSING");
 
   if (!clientId || !tenantId) {
     throw new Error(
@@ -33,11 +45,12 @@ function createMsalInstance() {
 export const msalInstance = createMsalInstance();
 
 export function getLoginRequest() {
-  const clientId = import.meta.env.VITE_CLIENT_ID as string;
+  const clientId = getClientId();
   return {
     scopes: [`${clientId}/.default`],
   };
 }
 
-export const isAuthConfigured = (): boolean =>
-  Boolean(import.meta.env.VITE_CLIENT_ID && import.meta.env.VITE_TENANT_ID);
+export const isAuthConfigured = (): boolean => {
+  return Boolean(getClientId() && getTenantId());
+};

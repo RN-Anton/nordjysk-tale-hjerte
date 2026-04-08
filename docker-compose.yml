@@ -9,7 +9,9 @@ services:
     mem_limit: 4g
     cpus: 0.5
     environment:
-      - API_KEY:${VITE_API_KEY}
+      - VITE_API_KEY=${VITE_API_KEY}
+      - VITE_CLIENT_ID=${VITE_CLIENT_ID}
+      - VITE_TENANT_ID=${VITE_TENANT_ID}
 
 networks:
   frontend-network:
