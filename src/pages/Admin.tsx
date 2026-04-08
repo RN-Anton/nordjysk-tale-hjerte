@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import { ArrowLeft, Upload, Shield, Loader2 } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,8 +15,8 @@ import {
 } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { isAuthConfigured, loginRequest } from "@/config/auth";
-import { acquireToken, fetchAuthMe, type AuthMeResponse } from "@/lib/auth";
+import { isAuthConfigured } from "@/authConfig";
+import { useAuth } from "@/useAuth";
 import {
   fetchLanguages,
   fetchAdGroups,
@@ -31,12 +30,10 @@ import {
 const Admin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { instance } = useMsal();
-  const isMsalAuthenticated = useIsAuthenticated();
+  const { login, restoreSession, getToken, isLoggedIn, isAdmin, user, loading: authLoading } = useAuth();
 
-  // Auth state
-  const [authChecking, setAuthChecking] = useState(true);
-  const [authMe, setAuthMe] = useState<AuthMeResponse | null>(null);
+  // Session restore
+  const [sessionChecked, setSessionChecked] = useState(false);
 
   // Voice upload state
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -52,43 +49,19 @@ const Admin = () => {
   const [savingGroup, setSavingGroup] = useState(false);
   const [adLoading, setAdLoading] = useState(false);
 
-  // Check auth on mount / when MSAL state changes
-  const checkAuth = useCallback(async () => {
-    if (!isAuthConfigured()) {
-      setAuthChecking(false);
-      return;
-    }
-
-    const token = await acquireToken(instance);
-    if (!token) {
-      setAuthMe(null);
-      setAuthChecking(false);
-      return;
-    }
-
-    try {
-      const me = await fetchAuthMe(token);
-      setAuthMe(me);
-    } catch {
-      setAuthMe(null);
-    } finally {
-      setAuthChecking(false);
-    }
-  }, [instance]);
-
+  // Restore session on mount
   useEffect(() => {
-    checkAuth();
-  }, [checkAuth, isMsalAuthenticated]);
+    restoreSession().then(() => setSessionChecked(true));
+  }, [restoreSession]);
 
   // Load data when admin is confirmed
   useEffect(() => {
-    if (!authMe?.isAdmin) return;
+    if (!sessionChecked || !isAdmin) return;
 
     const loadData = async () => {
-      const token = await acquireToken(instance);
+      const token = await getToken();
       if (!token) return;
 
-      // Fetch languages for voice upload
       fetchLanguages()
         .then((l) => {
           setLanguages(l);
@@ -97,7 +70,6 @@ const Admin = () => {
         })
         .catch(() => {});
 
-      // Fetch AD groups
       setAdLoading(true);
       try {
         const [groups, current] = await Promise.all([
@@ -116,11 +88,11 @@ const Admin = () => {
     };
 
     loadData();
-  }, [authMe?.isAdmin, instance, toast]);
+  }, [sessionChecked, isAdmin, getToken, toast]);
 
   const handleLogin = async () => {
     try {
-      await instance.loginPopup(loginRequest);
+      await login();
     } catch {
       toast({ title: "Fejl", description: "Login mislykkedes", variant: "destructive" });
     }
@@ -149,7 +121,7 @@ const Admin = () => {
       return;
     }
 
-    const token = await acquireToken(instance);
+    const token = await getToken();
     if (!token) return;
 
     setUploading(true);
@@ -167,7 +139,7 @@ const Admin = () => {
   };
 
   const handleSaveGroup = async () => {
-    const token = await acquireToken(instance);
+    const token = await getToken();
     if (!token || !selectedGroup) return;
 
     setSavingGroup(true);
@@ -192,8 +164,8 @@ const Admin = () => {
           <CardContent className="p-8 text-center space-y-4">
             <Shield className="mx-auto h-12 w-12 text-muted-foreground" />
             <p className="text-muted-foreground">
-              SSO er ikke konfigureret. Sæt <code>VITE_AZURE_CLIENT_ID</code> og{" "}
-              <code>VITE_AZURE_TENANT_ID</code> som miljøvariabler.
+              SSO er ikke konfigureret. Sæt <code>VITE_CLIENT_ID</code> og{" "}
+              <code>VITE_TENANT_ID</code> som miljøvariabler.
             </p>
             <Button variant="outline" onClick={() => navigate("/")}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Tilbage
@@ -204,7 +176,7 @@ const Admin = () => {
     );
   }
 
-  if (authChecking) {
+  if (!sessionChecked || authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -212,7 +184,7 @@ const Admin = () => {
     );
   }
 
-  if (!authMe?.isAuthenticated) {
+  if (!isLoggedIn) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="max-w-md w-full">
@@ -232,7 +204,7 @@ const Admin = () => {
     );
   }
 
-  if (!authMe.isAdmin) {
+  if (!isAdmin) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="max-w-md w-full">
@@ -240,7 +212,7 @@ const Admin = () => {
             <Shield className="mx-auto h-12 w-12 text-destructive" />
             <h2 className="text-xl font-semibold">Ingen adgang</h2>
             <p className="text-muted-foreground">
-              Du er logget ind som <strong>{authMe.user?.email ?? authMe.user?.name}</strong>, men har ikke administratorrettigheder.
+              Du er logget ind som <strong>{user?.email ?? user?.name}</strong>, men har ikke administratorrettigheder.
             </p>
             <Button variant="outline" onClick={() => navigate("/")}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Tilbage
@@ -261,7 +233,7 @@ const Admin = () => {
           <div className="flex-1">
             <h1 className="text-2xl font-semibold tracking-tight">Admin Panel</h1>
             <p className="text-sm tracking-wide text-primary-foreground/70">
-              {authMe.user?.name ?? authMe.user?.email}
+              {user?.name ?? user?.email}
             </p>
           </div>
           <ThemeToggle />

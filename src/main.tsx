@@ -1,5 +1,8 @@
 import { createRoot } from "react-dom/client";
+import { msalInstance } from "./authConfig";
 import App from "./App.tsx";
 import "./index.css";
 
-createRoot(document.getElementById("root")!).render(<App />);
+msalInstance.initialize().then(() => {
+  createRoot(document.getElementById("root")!).render(<App />);
+});

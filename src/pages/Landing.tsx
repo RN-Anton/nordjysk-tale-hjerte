@@ -1,31 +1,31 @@
 import { useNavigate } from "react-router-dom";
-import { useMsal, useIsAuthenticated } from "@azure/msal-react";
-import { loginRequest } from "@/config/auth";
 import { useEffect } from "react";
 import rnLogo from "@/assets/rn-logo.png";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { LogIn } from "lucide-react";
+import { useAuth } from "@/useAuth";
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { instance } = useMsal();
-  const isAuthenticated = useIsAuthenticated();
+  const { login, isLoggedIn, restoreSession, loading } = useAuth();
 
   useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/", { replace: true });
-    }
-  }, [isAuthenticated, navigate]);
+    restoreSession().then((data) => {
+      if (data?.isAuthenticated) {
+        navigate("/", { replace: true });
+      }
+    });
+  }, [restoreSession, navigate]);
 
   const handleLogin = async () => {
-    try {
-      await instance.loginPopup(loginRequest);
+    const result = await login();
+    if (result?.isAuthenticated) {
       navigate("/", { replace: true });
-    } catch (err) {
-      console.error("[MSAL] Login failed:", err);
     }
   };
+
+  if (isLoggedIn) return null;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -55,7 +55,7 @@ const Landing = () => {
               Regional Tekst-til-Tale Service
             </p>
           </div>
-          <Button size="lg" onClick={handleLogin} className="gap-2">
+          <Button size="lg" onClick={handleLogin} disabled={loading} className="gap-2">
             <LogIn className="h-5 w-5" />
             Log ind
           </Button>
