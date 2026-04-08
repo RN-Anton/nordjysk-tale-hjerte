@@ -33,8 +33,6 @@ COPY docker-entrypoint.sh /docker-entrypoint.sh
 # Set permissions for files within the public folder
 RUN find /usr/share/nginx/html/ -type f -name "*" -print0 | xargs -0 chmod 644
 RUN find /usr/share/nginx/html/ -type d -print0 | xargs -0 chmod 755
-RUN chmod +x /docker-entrypoint.sh
-
 # Configure nginx to run as non-root on port 80
 RUN apk add --no-cache libcap \
     && setcap 'cap_net_bind_service=+ep' /usr/sbin/nginx \
@@ -44,6 +42,8 @@ RUN apk add --no-cache libcap \
     && chown -R nginx:nginx /var/cache/nginx /var/log/nginx /etc/nginx/conf.d \
     && chmod -R 755 /var/cache/nginx /var/log/nginx \
     && chown nginx:nginx /usr/share/nginx/html/index.html
+
+RUN chmod +x /docker-entrypoint.sh
 
 USER nginx
 
