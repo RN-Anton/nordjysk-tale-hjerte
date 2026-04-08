@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useMsal, useIsAuthenticated } from "@azure/msal-react";
 import rnLogo from "@/assets/rn-logo.png";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { fetchVoices, fetchLanguages, type Voice, type Language } from "@/lib/api";
-import { acquireToken, fetchAuthMe } from "@/lib/auth";
+import { useAuth } from "@/useAuth";
 
 import SingleGenerator from "@/components/SingleGenerator";
 import BulkGenerator from "@/components/BulkGenerator";
@@ -16,11 +15,8 @@ import { Volume2, Settings, Loader2 } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { instance } = useMsal();
-  const isAuthenticated = useIsAuthenticated();
   const { toast } = useToast();
-  const [isAdmin, setIsAdmin] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
+  const { isLoggedIn, isAdmin, loading: authLoading, restoreSession } = useAuth();
 
   const [voices, setVoices] = useState<Voice[]>([]);
   const [languages, setLanguages] = useState<Language[]>([]);
@@ -33,32 +29,25 @@ const Index = () => {
   const [speed, setSpeed] = useState(1.0);
   const [singleText, setSingleText] = useState("");
   const [bulkText, setBulkText] = useState("");
-  
+  const [sessionChecked, setSessionChecked] = useState(false);
 
-  // Redirect to login if not authenticated
+  // Try to restore session on mount
   useEffect(() => {
-    if (!isAuthenticated) {
+    restoreSession().then((data) => {
+      setSessionChecked(true);
+      if (!data?.isAuthenticated) {
+        navigate("/login", { replace: true });
+      }
+    });
+  }, [restoreSession, navigate]);
+
+  useEffect(() => {
+    if (!sessionChecked) return;
+    if (!isLoggedIn) {
       navigate("/login", { replace: true });
+      return;
     }
-  }, [isAuthenticated, navigate]);
 
-  // Check admin status
-  useEffect(() => {
-    if (!isAuthenticated) return;
-    setAuthLoading(true);
-    acquireToken(instance)
-      .then((token) => {
-        if (!token) return;
-        return fetchAuthMe(token);
-      })
-      .then((res) => {
-        if (res) setIsAdmin(res.isAdmin);
-      })
-      .catch((err) => console.error("[Auth] admin check failed:", err))
-      .finally(() => setAuthLoading(false));
-  }, [isAuthenticated, instance]);
-
-  useEffect(() => {
     fetchVoices()
       .then((v) => {
         setVoices(v);
@@ -85,8 +74,7 @@ const Index = () => {
         toast({ title: "Fejl", description: err.message || "Kunne ikke hente sprog fra serveren.", variant: "destructive" });
       })
       .finally(() => setLanguagesLoading(false));
-  }, []);
-
+  }, [sessionChecked, isLoggedIn, navigate, toast]);
 
   const sharedProps = {
     voices,
@@ -101,7 +89,6 @@ const Index = () => {
     setLanguage,
     speed,
     setSpeed,
-    
   };
 
   const singleProps = {
@@ -116,7 +103,7 @@ const Index = () => {
     setBulkText,
   };
 
-  if (authLoading) {
+  if (!sessionChecked || authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -170,7 +157,6 @@ const Index = () => {
           </CardContent>
         </Card>
       </main>
-
     </div>
   );
 };
