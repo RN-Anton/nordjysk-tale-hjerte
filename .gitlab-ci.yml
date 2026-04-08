@@ -10,3 +10,5 @@ variables:
 before_script:
   - echo "OSUSER=$OSUSER" > .env
   - echo "OSPASSWORD=$OSPASSWORD" >> .env
+  - printenv | grep -E '^(VITE_)' >> .env || true
+  - cat .env
