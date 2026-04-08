@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { msalInstance, loginRequest } from "./authConfig";
+import { msalInstance, getLoginRequest } from "./authConfig";
 import { API_BASE_URL } from "./config/config";
 
 export interface AuthUser {
@@ -25,10 +25,10 @@ export function useAuth() {
   const login = useCallback(async () => {
     setLoading(true);
     try {
-      // Step 1: trigger the Azure AD login popup
+      const loginRequest = getLoginRequest();
+
       await msalInstance.loginPopup(loginRequest);
 
-      // Step 2: get the actual access token silently from the cache
       const account = msalInstance.getAllAccounts()[0];
       const tokenResponse = await msalInstance.acquireTokenSilent({
         ...loginRequest,
@@ -37,7 +37,6 @@ export function useAuth() {
 
       const token = tokenResponse.accessToken;
 
-      // Step 3: ask our backend who this user is
       const response = await fetch(`${API_BASE_URL}/auth/me`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -74,15 +73,13 @@ export function useAuth() {
     setIsLoggedIn(false);
   }, []);
 
-  /**
-   * Try to silently restore an existing session (call on mount).
-   */
   const restoreSession = useCallback(async () => {
     const accounts = msalInstance.getAllAccounts();
     if (accounts.length === 0) return null;
 
     setLoading(true);
     try {
+      const loginRequest = getLoginRequest();
       const tokenResponse = await msalInstance.acquireTokenSilent({
         ...loginRequest,
         account: accounts[0],
@@ -111,14 +108,12 @@ export function useAuth() {
     }
   }, []);
 
-  /**
-   * Get a fresh token (for API calls that need Authorization header).
-   */
   const getToken = useCallback(async (): Promise<string | null> => {
     const accounts = msalInstance.getAllAccounts();
     if (accounts.length === 0) return null;
 
     try {
+      const loginRequest = getLoginRequest();
       const result = await msalInstance.acquireTokenSilent({
         ...loginRequest,
         account: accounts[0],
@@ -126,6 +121,7 @@ export function useAuth() {
       return result.accessToken;
     } catch {
       try {
+        const loginRequest = getLoginRequest();
         const result = await msalInstance.acquireTokenPopup(loginRequest);
         return result.accessToken;
       } catch {
