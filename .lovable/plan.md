@@ -1,48 +1,26 @@
 
 
-# Landing Page with Login Gate and Admin-Conditional UI
+# Fix: MSAL `crypto_nonexistent` Error
 
-## Overview
-Replace the current direct-to-app flow with a landing page that requires Azure AD login. After login, check admin status via `/auth/me`. Non-admins see the TTS tool without the admin button; admins see the Settings icon to access the admin panel.
+## Problem
+`new PublicClientApplication(msalConfig)` runs at module load time (line 15) and immediately requires the Web Crypto API. In environments where crypto is unavailable (e.g., the Lovable preview iframe, or certain restricted browser contexts like Imprivata CE), this crashes the entire app.
 
-## Changes
+## Solution
+Defer MSAL initialization into a React component using `useState` + `useEffect`, and guard it with a crypto availability check. If crypto is unavailable, render the app without `MsalProvider` (landing page will show an error message instead of crashing).
 
-### 1. New Landing Page (`src/pages/Landing.tsx`)
-- Full-screen page with the same primary color header/branding as Index
-- Region Nordjylland logo, "Velkommen til Regional Tekst-til-Tale Service" heading
-- Single "Log ind" button that triggers MSAL login popup
-- On successful login, navigate to `/` (the main app)
-- Uses same theme colors/ThemeToggle
+### Changes
 
-### 2. Update Routing (`src/App.tsx`)
-- Add new route: `/login` renders `Landing`
-- `/` still renders `Index` (but Index now gates on authentication)
+**`src/App.tsx`**
+- Remove the top-level `const msalInstance = new PublicClientApplication(msalConfig)`.
+- Add a state-based initialization inside the `App` component:
+  - `msalInstance` state starts as `null`.
+  - `useEffect` checks `window.crypto?.subtle` exists, then creates the instance.
+  - If crypto is unavailable, set an `error` state.
+- If `msalInstance` is `null` and no error, show a loading spinner.
+- If error, show a message: "Browseren understøtter ikke den nødvendige kryptering. Prøv en anden browser."
+- If initialized, render `<MsalProvider instance={msalInstance}>` as before.
 
-### 3. Update Index Page (`src/pages/Index.tsx`)
-- On mount: check if MSAL has an active account. If not, redirect to `/login`.
-- After confirming authentication, call `fetchAuthMe(token)` to get admin status.
-- Store `isAdmin` in local state.
-- Conditionally render the Settings (admin panel) button only when `isAdmin === true`.
-- Remove the Settings button for non-admin users entirely.
-- Show a loading spinner while the auth check is in progress.
+**`src/pages/Landing.tsx`** — no changes needed; it already depends on `useMsal` which will only run when wrapped in `MsalProvider`.
 
-### 4. Auth helper update (`src/lib/auth.ts`)
-- Remove `X-API-Key` from the `/auth/me` call (backend says it's not required for this endpoint).
-
-## Flow
-
-```text
-User visits /
-  → No MSAL account? → Redirect to /login (Landing page)
-  → "Log ind" button → MSAL popup → On success → Navigate to /
-  → Index mounts → acquireToken → fetchAuthMe
-    → isAdmin=true  → show Settings icon + TTS tool
-    → isAdmin=false → show TTS tool only (no Settings icon)
-```
-
-## Technical Details
-- MSAL `instance.getAllAccounts()` is used to check if user is logged in
-- The `useMsal` and `useIsAuthenticated` hooks from `@azure/msal-react` handle reactivity
-- Landing page uses `instance.loginPopup(loginRequest)` for the login flow
-- No changes to the Admin page itself -- it already has its own auth gating
+This approach ensures the app never crashes at load time, and works correctly once deployed to a proper environment with Web Crypto support.
 
