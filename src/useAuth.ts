@@ -26,44 +26,17 @@ export function useAuth() {
     setLoading(true);
     try {
       const loginRequest = getLoginRequest();
-
-      await msalInstance.loginPopup(loginRequest);
-
-      const account = msalInstance.getAllAccounts()[0];
-      const tokenResponse = await msalInstance.acquireTokenSilent({
-        ...loginRequest,
-        account,
-      });
-
-      const token = tokenResponse.accessToken;
-
-      const response = await fetch(`${API_BASE_URL}/auth/me`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data: AuthMeResponse = await response.json();
-
-      if (data.isAuthenticated) {
-        setAccessToken(token);
-        setUser(data.user);
-        setIsAdmin(data.isAdmin);
-        setIsLoggedIn(true);
-      }
-
-      return data;
+      await msalInstance.loginRedirect(loginRequest);
+      // Browser navigates away — no code runs after this
     } catch (err) {
-      console.error("[Auth] Login failed:", err);
-      return null;
-    } finally {
+      console.error("[Auth] Login redirect failed:", err);
       setLoading(false);
     }
   }, []);
 
   const logout = useCallback(async () => {
     try {
-      await msalInstance.logoutPopup();
+      await msalInstance.logoutRedirect();
     } catch (err) {
       console.error("[Auth] Logout failed:", err);
     }
@@ -74,11 +47,17 @@ export function useAuth() {
   }, []);
 
   const restoreSession = useCallback(async () => {
-    const accounts = msalInstance.getAllAccounts();
-    if (accounts.length === 0) return null;
-
     setLoading(true);
     try {
+      // Handle redirect response first (returns null if no redirect occurred)
+      await msalInstance.handleRedirectPromise();
+
+      const accounts = msalInstance.getAllAccounts();
+      if (accounts.length === 0) {
+        setLoading(false);
+        return null;
+      }
+
       const loginRequest = getLoginRequest();
       const tokenResponse = await msalInstance.acquireTokenSilent({
         ...loginRequest,
