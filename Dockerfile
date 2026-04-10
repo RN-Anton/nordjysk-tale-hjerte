@@ -47,6 +47,7 @@ RUN apk add --no-cache libcap \
     && chown nginx:nginx /usr/share/nginx/html/index.html
 
 # Ensure all entrypoint scripts are executable (including base nginx entrypoint)
+RUN sed -i 's/\r$//' /docker-entrypoint.d/99-runtime-env.sh
 RUN chmod +x /docker-entrypoint.d/*.sh
 RUN test ! -f /docker-entrypoint.sh || chmod +x /docker-entrypoint.sh
 
