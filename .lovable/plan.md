@@ -2,19 +2,29 @@
 
 ## Problem
 
-The Docker build uses `node:18-alpine`, but `vite@^6.4.2` requires Node >= 20. Additionally, esbuild 0.25.0 (required by Vite 6) conflicts with esbuild 0.21.5 that gets hoisted from other dependencies, causing the install script to fail with version mismatch.
+The `99-runtime-env.sh` script fails with "Permission denied" despite `chmod +x` being applied in the Dockerfile. The most likely cause is **Windows-style CRLF line endings** in the shell script. When a `.sh` file has `\r\n` endings, the shebang becomes `#!/bin/sh\r`, which the shell cannot interpret -- producing the misleading "can't open" error.
 
 ## Plan
 
-**1. Upgrade Dockerfile to Node 20**
+**1. Strip CRLF in Dockerfile before chmod**
 
-Change line 1 from `node:18-alpine` to `node:20-alpine`. Vite 6 and its dependency `esbuild@0.25.0` require Node >= 20. This also resolves the `eslint-visitor-keys` engine warning.
+Add a `dos2unix` or `sed` command to strip carriage returns from the entrypoint script before making it executable:
 
-**2. Regenerate `package-lock.json`**
+```dockerfile
+# After COPY docker-entrypoint.sh /docker-entrypoint.d/99-runtime-env.sh
+RUN sed -i 's/\r$//' /docker-entrypoint.d/99-runtime-env.sh
+RUN chmod +x /docker-entrypoint.d/*.sh
+```
 
-Delete and regenerate the lockfile using Node 20 + npm to ensure all integrity hashes and resolved versions are consistent, particularly for esbuild 0.25.0.
+**2. Prevent future CRLF issues via `.gitattributes`**
+
+Add a rule to force LF endings for all shell scripts:
+
+```
+*.sh text eol=lf
+```
 
 ### Files to change
-- `Dockerfile` -- line 1: `node:18-alpine` → `node:20-alpine`
-- `package-lock.json` -- regenerate fresh
+- `Dockerfile` -- add `sed` line to strip `\r` before chmod
+- `.gitattributes` -- add `*.sh text eol=lf`
 
