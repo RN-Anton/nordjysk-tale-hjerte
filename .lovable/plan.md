@@ -2,30 +2,19 @@
 
 ## Problem
 
-The `package-lock.json` is out of sync with `package.json`. The lockfile contains `vite@6.4.2` and `esbuild@0.25.0`, but `package.json` specifies `vite@^5.4.19` (which resolves to `5.4.x`) and its corresponding `esbuild@0.21.x`. This causes `npm ci` to fail with integrity/version mismatch errors.
-
-## Root cause
-
-When the lockfile was regenerated previously, it resolved to newer major versions that don't match the semver ranges in `package.json`.
+The Docker build uses `node:18-alpine`, but `vite@^6.4.2` requires Node >= 20. Additionally, esbuild 0.25.0 (required by Vite 6) conflicts with esbuild 0.21.5 that gets hoisted from other dependencies, causing the install script to fail with version mismatch.
 
 ## Plan
 
-**1. Regenerate `package-lock.json` correctly**
+**1. Upgrade Dockerfile to Node 20**
 
-Delete the current `package-lock.json` and run `npm install` fresh so it resolves versions that match the `^5.4.19` range for vite and all other dependencies. This produces a clean, consistent lockfile.
+Change line 1 from `node:18-alpine` to `node:20-alpine`. Vite 6 and its dependency `esbuild@0.25.0` require Node >= 20. This also resolves the `eslint-visitor-keys` engine warning.
 
-**2. Remove bun lockfiles**
+**2. Regenerate `package-lock.json`**
 
-Delete `bun.lock` and `bun.lockb` to prevent the Lovable sandbox (which uses Bun) from interfering with the npm-based lockfile.
+Delete and regenerate the lockfile using Node 20 + npm to ensure all integrity hashes and resolved versions are consistent, particularly for esbuild 0.25.0.
 
-**3. Update Dockerfile to handle lockfile sync issues defensively**
-
-Change the install command from `npm ci || npm install` to just `npm install` as a fallback safety net, since `npm ci` is strict about lockfile sync and will fail if there's any drift.
-
-### Technical details
-
-- `npm ci` requires exact match between `package.json` and `package-lock.json`
-- The lockfile had vite 6.x hashes but package.json constrains to 5.x
-- Running `npm install` regenerates the lockfile to match current `package.json` ranges
-- Files touched: `package-lock.json` (regenerated), `bun.lock` (deleted), `bun.lockb` (deleted), `Dockerfile` (minor install command tweak)
+### Files to change
+- `Dockerfile` -- line 1: `node:18-alpine` → `node:20-alpine`
+- `package-lock.json` -- regenerate fresh
 
