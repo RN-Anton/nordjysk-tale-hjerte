@@ -29,7 +29,7 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy the entire public folder
 COPY public/ /usr/share/nginx/html/
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY docker-entrypoint.sh /docker-entrypoint.sh
+COPY docker-entrypoint.sh /docker-entrypoint.d/99-runtime-env.sh
 # Set permissions for files within the public folder
 RUN find /usr/share/nginx/html/ -type f -name "*" -print0 | xargs -0 chmod 644
 RUN find /usr/share/nginx/html/ -type d -print0 | xargs -0 chmod 755
@@ -43,10 +43,9 @@ RUN apk add --no-cache libcap \
     && chmod -R 755 /var/cache/nginx /var/log/nginx \
     && chown nginx:nginx /usr/share/nginx/html/index.html
 
-RUN chmod +x /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.d/*.sh
 
 USER nginx
 
 EXPOSE 80
-ENTRYPOINT ["/docker-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]
