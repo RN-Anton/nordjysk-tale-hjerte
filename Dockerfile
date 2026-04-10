@@ -13,7 +13,7 @@ ENV VITE_TENANT_ID=$VITE_TENANT_ID
 
 # Copy package files and install dependencies (npm only — ignore bun lockfiles)
 COPY package.json package-lock.json* ./
-RUN npm ci || npm install
+RUN npm install
 # Copy the rest of the frontend source
 COPY . .
 # Remove bun lockfiles so they don't interfere
