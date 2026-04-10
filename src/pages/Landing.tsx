@@ -18,11 +18,8 @@ const Landing = () => {
     });
   }, [restoreSession, navigate]);
 
-  const handleLogin = async () => {
-    const result = await login();
-    if (result?.isAuthenticated) {
-      navigate("/", { replace: true });
-    }
+  const handleLogin = () => {
+    login();
   };
 
   if (isLoggedIn) return null;
@@ -57,7 +54,7 @@ const Landing = () => {
           </div>
           <Button size="lg" onClick={handleLogin} disabled={loading} className="gap-2">
             <LogIn className="h-5 w-5" />
-            Log ind
+            Digitalisering og IT Login
           </Button>
         </div>
       </main>
