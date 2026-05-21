@@ -17,6 +17,6 @@ services:
 networks:
   frontend-network:
     external: true
-    name: small_apps
+    name: app-network
 
 
