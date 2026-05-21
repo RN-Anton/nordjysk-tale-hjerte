@@ -34,7 +34,7 @@ nordjysk-tale-hjerte/
 │   ├── authConfig.ts          # MSAL config (clientId, tenantId, redirectUri)
 │   ├── useAuth.ts             # Auth hook: login, logout, restoreSession, getToken
 │   ├── config/
-│   │   └── config.ts          # API_BASE_URL, API_KEY (hardcoded in source)
+│   │   └── config.ts          # API_BASE_URL, AUTH_BASE_URL, API_KEY (from env vars)
 │   ├── lib/
 │   │   └── api.ts             # All backend API calls (TTS + LLM + Admin + Content Safety)
 │   ├── hooks/
@@ -50,6 +50,7 @@ nordjysk-tale-hjerte/
 │   │   ├── Index.tsx          # Main app page (authenticated, tabs: single/bulk)
 │   │   ├── Admin.tsx          # Admin panel (voice upload + AD group management)
 │   │   ├── Landing.tsx        # Login landing page
+│   │   ├── Callback.tsx       # Azure AD redirect callback handler
 │   │   └── NotFound.tsx       # 404 fallback
 │   └── assets/
 │       └── rn-logo.png        # Region Nordjylland logo
@@ -72,6 +73,7 @@ nordjysk-tale-hjerte/
 ## 4. Routing
 | Route | Component | Auth Required | Admin Only |
 |-------|-----------|--------------|------------|
+| `/callback` | `Callback` | No (handles redirect) | No |
 | `/login` | `Landing` | No (login page) | No |
 | `/` | `Index` | Yes | No |
 | `/admin` | `Admin` | Yes | Yes |
@@ -81,19 +83,22 @@ nordjysk-tale-hjerte/
 
 ## 5. Authentication Flow
 1. **Config:** `VITE_CLIENT_ID` + `VITE_TENANT_ID` env vars → `msalInstance` in `authConfig.ts`
-2. **Login:** `loginRedirect()` → Azure AD → redirect back to app
-3. **Session Restore:** `handleRedirectPromise()` → `getAllAccounts()` → `acquireTokenSilent()` → call `/auth/me` backend endpoint
+2. **Login:** `loginRedirect()` with `prompt: select_account` → Azure AD → redirect to `/callback`
+3. **Callback:** `handleRedirectPromise()` → `acquireTokenSilent()` → call `AUTH_BASE_URL/auth/me`
 4. **Auth Response:** `{ isAuthenticated, isAdmin, user: { sub, name, email } }`
-5. **Token Retrieval:** `getToken()` → silent first, fallback to popup
+5. **Session Restore:** On app load, `restoreSession()` checks for cached accounts and silently acquires token
 6. **Auth Guard:** `Index` and `Admin` pages check `isLoggedIn`/`isAdmin` and redirect to `/login` if unauthenticated
 7. **Cache:** `sessionStorage` (MSAL), token passed as `Bearer` header to admin endpoints
+
+**Important:** `AUTH_BASE_URL` is the same as `API_BASE_URL` (both point to the backend mounted at `/call`).
+The backend endpoint is: `GET /call/auth/me` with `Authorization: Bearer <azure_ad_jwt_token>`.
 
 ---
 
 ## 6. Backend API (`src/lib/api.ts`)
 
 ### Base Configuration
-- **Base URL:** `API_BASE_URL` from `config/config.ts`
+- **Base URL:** `API_BASE_URL` from `config/config.ts` (set via `VITE_API_BASE_URL` env var)
 - **Auth Header:** `X-API-Key: API_KEY` for TTS endpoints
 - **Admin Auth:** `Authorization: Bearer <token>` in addition to API key
 
@@ -101,6 +106,7 @@ nordjysk-tale-hjerte/
 
 | Method | Endpoint | Function | Returns | Auth |
 |--------|----------|----------|---------|------|
+| GET | `/auth/me` | (Auth verification) | `{ isAuthenticated, isAdmin, user }` | Bearer Token |
 | GET | `/api/v1/tts/voices` | `fetchVoices()` | `Voice[]` | API Key |
 | GET | `/api/v1/tts/languages` | `fetchLanguages()` | `Language[]` | API Key |
 | POST | `/api/v1/tts/generate` | `generateSpeech(text, voice, language, speed)` | `Blob` (audio) | API Key |
@@ -117,6 +123,8 @@ interface Voice { id: string; name: string; }
 interface Language { id: string; name: string; }
 interface AdGroup { id: string; name: string; }
 interface ValidationResult { is_safe: boolean; reason: string | null; }
+interface AuthUser { sub?: string; name?: string; email?: string; }
+interface AuthMeResponse { isAuthenticated: boolean; isAdmin: boolean; user: AuthUser | null; error?: string; }
 interface BulkLine {
   id: string; text: string; optimizedText?: string;
   status: "pending" | "optimizing" | "generating" | "done" | "error";
@@ -173,12 +181,12 @@ interface BulkLine {
 
 | Variable | Used In | Purpose |
 |----------|---------|---------|
-| `VITE_API_BASE_URL` | Docker build arg, nginx runtime | Backend API base URL |
-| `VITE_API_KEY` | Docker build arg, runtime | TTS API authentication key |
+| `VITE_API_BASE_URL` | Docker build arg | Backend API base URL (e.g., `https://talebesked.ai.rn.dk/call`) |
+| `VITE_API_KEY` | Docker build arg | TTS API authentication key |
 | `VITE_CLIENT_ID` | Docker build arg, nginx runtime | Azure AD application client ID |
 | `VITE_TENANT_ID` | Docker build arg, nginx runtime | Azure AD tenant ID |
 
-**Note:** `config/config.ts` contains hardcoded fallback values for `API_BASE_URL` and `API_KEY`. In production, these are overridden by environment variables during build/runtime.
+**Note:** `config/config.ts` reads `VITE_API_BASE_URL` and `VITE_API_KEY` at build time. `AUTH_BASE_URL` is derived from `API_BASE_URL`.
 
 ---
 
@@ -195,7 +203,7 @@ interface BulkLine {
 - Port mapping: `4457:80`
 - External network: `small_apps`
 - Resource limits: 4GB RAM, 0.5 CPU
-- Runtime env: `VITE_API_KEY`, `VITE_CLIENT_ID`, `VITE_TENANT_ID`
+- Runtime env: `VITE_API_BASE_URL`, `VITE_API_KEY`, `VITE_CLIENT_ID`, `VITE_TENANT_ID`
 
 ### nginx.conf
 - SPA mode: `try_files $uri /index.html`
@@ -271,7 +279,7 @@ npm run test:watch   # Vitest watch mode
 import { useAuth } from "@/useAuth";          // Auth hook
 import { useToast } from "@/hooks/use-toast";  // Toast notifications
 import { generateSpeech, fetchVoices, fetchLanguages, queryLlm, validateContent } from "@/lib/api";
-import { API_BASE_URL, API_KEY } from "@/config/config";
+import { API_BASE_URL, API_KEY, AUTH_BASE_URL } from "@/config/config";
 import { isAuthConfigured } from "@/authConfig";
 ```
 
