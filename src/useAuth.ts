@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { msalInstance, getLoginRequest } from "./authConfig";
-import { API_BASE_URL } from "./config/config";
+import { AUTH_BASE_URL } from "./config/config";
 
 export interface AuthUser {
   sub?: string;
@@ -96,7 +96,7 @@ export function useAuth() {
       const token = tokenResponse.accessToken;
       console.log("[Auth] Silent token acquired, calling /auth/me...");
 
-      const authResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+      const authResponse = await fetch(`${AUTH_BASE_URL}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 

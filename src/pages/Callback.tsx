@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { msalInstance, getLoginRequest } from "@/authConfig";
-import { API_BASE_URL } from "@/config/config";
+import { AUTH_BASE_URL } from "@/config/config";
 
 export default function Callback() {
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ export default function Callback() {
             account: accounts[0],
           });
 
-          const authResponse = await fetch(`${API_BASE_URL}/auth/me`, {
+          const authResponse = await fetch(`${AUTH_BASE_URL}/auth/me`, {
             headers: { Authorization: `Bearer ${result.accessToken}` },
           });
 
