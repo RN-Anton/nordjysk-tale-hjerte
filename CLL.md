@@ -186,7 +186,7 @@ interface BulkLine {
 | `VITE_CLIENT_ID` | Docker build arg, nginx runtime | Azure AD application client ID |
 | `VITE_TENANT_ID` | Docker build arg, nginx runtime | Azure AD tenant ID |
 
-**Note:** `config/config.ts` reads `VITE_API_BASE_URL` and `VITE_API_KEY` at build time. `AUTH_BASE_URL` is derived from `API_BASE_URL`.
+**Note:** `config/config.ts` reads `VITE_API_BASE_URL` and `VITE_API_KEY` at build time. If `VITE_API_BASE_URL` is not set, it defaults to `"/call"` to match the backend's `root_path`. `AUTH_BASE_URL` is derived from `API_BASE_URL`.
 
 ---
 
@@ -288,4 +288,3 @@ import { isAuthConfigured } from "@/authConfig";
 
 ---
 
-*Last updated: 2026-05-21*
