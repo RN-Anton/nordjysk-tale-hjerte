@@ -15,21 +15,23 @@ export interface AuthMeResponse {
   error?: string;
 }
 
-// Module-level flag to track if a redirect interaction is in progress
-let isInteractionInProgress = false;
-let interactionTimeout: ReturnType<typeof setTimeout> | null = null;
-
 /**
- * Clear the interaction flag after a timeout.
- * This is a safety net in case the flag gets stuck due to browser extensions
- * like Imprivata interfering with the MSAL flow.
+ * Clear MSAL interaction state from sessionStorage.
+ * This fixes the "interaction_in_progress" error when MSAL's internal state
+ * gets stuck (often caused by browser extensions like Imprivata).
  */
-const clearInteractionFlag = () => {
-  if (interactionTimeout) clearTimeout(interactionTimeout);
-  interactionTimeout = setTimeout(() => {
-    isInteractionInProgress = false;
-    console.log("[Auth] Interaction flag cleared by safety timeout");
-  }, 15000); // 15 second timeout
+const clearMsalInteractionState = () => {
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < sessionStorage.length; i++) {
+    const key = sessionStorage.key(i);
+    if (key && (key.startsWith("msal.interaction") || key.startsWith("msal.error"))) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach((key) => {
+    sessionStorage.removeItem(key);
+    console.log(`[Auth] Cleared MSAL state key: ${key}`);
+  });
 };
 
 export function useAuth() {
@@ -39,28 +41,18 @@ export function useAuth() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const canStartInteraction = useCallback(() => {
-    return !isInteractionInProgress;
-  }, []);
-
   const login = useCallback(async () => {
-    if (isInteractionInProgress) {
-      console.warn("[Auth] Cannot start login — interaction already in progress");
-      return;
-    }
-
     setLoading(true);
-    isInteractionInProgress = true;
-    clearInteractionFlag(); // Safety net
 
     try {
+      // Clear any stuck MSAL interaction state before starting a new login
+      clearMsalInteractionState();
+
       const loginRequest = getLoginRequest();
       console.log("[Auth] Starting loginRedirect...");
       await msalInstance.loginRedirect(loginRequest);
       // Browser navigates away — no code runs after this
     } catch (err) {
-      isInteractionInProgress = false;
-      if (interactionTimeout) clearTimeout(interactionTimeout);
       console.error("[Auth] Login redirect failed:", err);
       setLoading(false);
     }
@@ -72,8 +64,6 @@ export function useAuth() {
     } catch (err) {
       console.error("[Auth] Logout failed:", err);
     }
-    isInteractionInProgress = false;
-    if (interactionTimeout) clearTimeout(interactionTimeout);
     setAccessToken(null);
     setUser(null);
     setIsAdmin(false);
@@ -82,8 +72,6 @@ export function useAuth() {
 
   const restoreSession = useCallback(async () => {
     setLoading(true);
-    isInteractionInProgress = true;
-    clearInteractionFlag(); // Safety net
 
     try {
       console.log("[Auth] Handling redirect promise...");
@@ -94,8 +82,6 @@ export function useAuth() {
       console.log("[Auth] Accounts found:", accounts.length);
 
       if (accounts.length === 0) {
-        isInteractionInProgress = false;
-        if (interactionTimeout) clearTimeout(interactionTimeout);
         setLoading(false);
         return null;
       }
@@ -124,13 +110,9 @@ export function useAuth() {
         setIsLoggedIn(true);
       }
 
-      isInteractionInProgress = false;
-      if (interactionTimeout) clearTimeout(interactionTimeout);
       setLoading(false);
       return data;
     } catch (err) {
-      isInteractionInProgress = false;
-      if (interactionTimeout) clearTimeout(interactionTimeout);
       setLoading(false);
 
       console.error("[Auth] Restore session failed:", err);
@@ -141,20 +123,6 @@ export function useAuth() {
 
       return null;
     }
-  }, []);
-
-  useEffect(() => {
-    const handleInterruptedRedirect = async () => {
-      try {
-        await msalInstance.handleRedirectPromise();
-        isInteractionInProgress = false;
-        console.log("[Auth] Interrupted redirect handled successfully");
-      } catch (err) {
-        console.warn("[Auth] Interrupted redirect still in progress:", err);
-      }
-    };
-
-    handleInterruptedRedirect();
   }, []);
 
   const getToken = useCallback(async (): Promise<string | null> => {
@@ -189,6 +157,5 @@ export function useAuth() {
     isAdmin,
     isLoggedIn,
     loading,
-    canStartInteraction,
   };
 }

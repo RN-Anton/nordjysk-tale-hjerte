@@ -8,7 +8,7 @@ import { useAuth } from "@/useAuth";
 
 const Landing = () => {
   const navigate = useNavigate();
-  const { login, isLoggedIn, restoreSession, loading, canStartInteraction } = useAuth();
+  const { login, isLoggedIn, restoreSession, loading } = useAuth();
   const loginAttempted = useRef(false);
 
   useEffect(() => {
@@ -22,16 +22,9 @@ const Landing = () => {
   const handleLogin = useCallback(() => {
     // Prevent double-clicking
     if (loginAttempted.current) return;
-
-    // Don't start a new login if an interaction is already in progress
-    if (!canStartInteraction()) {
-      console.warn("[Landing] Cannot login — restoreSession or another interaction is active");
-      return;
-    }
-
     loginAttempted.current = true;
     login();
-  }, [login, canStartInteraction]);
+  }, [login]);
 
   if (isLoggedIn) return null;
 
@@ -63,7 +56,7 @@ const Landing = () => {
               Regional Tekst-til-Tale Service
             </p>
           </div>
-          <Button size="lg" onClick={handleLogin} disabled={loading || !canStartInteraction()} className="gap-2">
+          <Button size="lg" onClick={handleLogin} disabled={loading} className="gap-2">
             <LogIn className="h-5 w-5" />
             Digitalisering og IT Login
           </Button>
