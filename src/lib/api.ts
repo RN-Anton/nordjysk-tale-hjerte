@@ -24,6 +24,11 @@ export interface Language {
   name: string;
 }
 
+export interface ValidationResult {
+  is_safe: boolean;
+  reason: string | null;
+}
+
 // Normalise voices: supports [{name:"x"}, ...] or ["x", ...]
 function normalizeVoices(raw: unknown[]): Voice[] {
   const seen = new Set<string>();
@@ -108,6 +113,13 @@ export async function generateSpeech(
     headers: { ...headers(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
+  
+  // Handle 400 Bad Request for content safety
+  if (res.status === 400) {
+    const errorData = await res.json();
+    throw new Error(errorData.detail ?? "Indholdet overtræder sikkerhedsreglerne.");
+  }
+  
   if (!res.ok) throw new Error("Kunne ikke generere lydfil");
   return res.blob();
 }
@@ -121,6 +133,17 @@ export async function queryLlm(userQuery: string): Promise<string> {
   if (!res.ok) throw new Error("Kunne ikke optimere teksten");
   const data = await res.json();
   return data.response ?? "";
+}
+
+export async function validateContent(text: string): Promise<ValidationResult> {
+  const res = await fetch(`${BASE_URL}/api/v1/llm/validate`, {
+    method: "POST",
+    headers: { ...headers(), "Content-Type": "application/json" },
+    body: JSON.stringify({ user_query: text }),
+  });
+  if (!res.ok) throw new Error("Kunne ikke validere indholdet");
+  const data: ValidationResult = await res.json();
+  return data;
 }
 
 export async function uploadVoice(

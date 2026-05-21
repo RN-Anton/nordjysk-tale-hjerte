@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   generateSpeech,
   queryLlm,
+  validateContent,
   type Voice,
   type Language,
 } from "@/lib/api";
@@ -41,7 +42,6 @@ interface SingleGeneratorProps {
   setSpeed: (s: number) => void;
   text: string;
   setText: (t: string) => void;
-  
 }
 
 const SingleGenerator = ({
@@ -59,7 +59,6 @@ const SingleGenerator = ({
   setSpeed,
   text,
   setText,
-  
 }: SingleGeneratorProps) => {
   const { toast } = useToast();
   const [textError, setTextError] = useState("");
@@ -101,6 +100,23 @@ const SingleGenerator = ({
       return;
     }
     setTextError("");
+
+    // Pre-validate content for safety
+    try {
+      const validation = await validateContent(text.trim());
+      if (!validation.is_safe) {
+        toast({
+          title: "Indhold ikke godkendt",
+          description: `Indholdet overtræder sikkerhedsreglerne: ${validation.reason}`,
+          variant: "destructive",
+        });
+        return;
+      }
+    } catch {
+      toast({ title: "Fejl", description: "Kunne ikke validere indholdet. Prøv igen.", variant: "destructive" });
+      return;
+    }
+
     if (audioUrl) {
       URL.revokeObjectURL(audioUrl);
       setAudioUrl(null);
@@ -117,9 +133,10 @@ const SingleGenerator = ({
       audioBlobRef.current = blob;
       setAudioUrl(URL.createObjectURL(blob));
       toast({ title: "Færdig!", description: "Din lydfil er klar." });
-    } catch {
+    } catch (err) {
       clearInterval(progressInterval);
-      toast({ title: "Fejl", description: "Noget gik galt. Prøv igen.", variant: "destructive" });
+      const message = err instanceof Error ? err.message : "Noget gik galt. Prøv igen.";
+      toast({ title: "Fejl", description: message, variant: "destructive" });
     } finally {
       setGenerating(false);
     }
@@ -214,11 +231,8 @@ const SingleGenerator = ({
         </div>
       </div>
 
-
       {/* Actions */}
       <div className="flex flex-col gap-4 sm:flex-row">
-
-
         <Button
           className="flex-1 h-14 text-lg rounded-xl"
           size="lg"

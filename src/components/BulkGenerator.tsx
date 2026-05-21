@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   generateSpeech,
   queryLlm,
+  validateContent,
   type Voice,
   type Language,
 } from "@/lib/api";
@@ -27,14 +28,11 @@ import {
   Sparkles,
   FileText,
   Package,
-  Play,
   Trash2,
-  Gauge,
   Pencil,
   Check,
   X,
 } from "lucide-react";
-import { Slider } from "@/components/ui/slider";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,7 +56,6 @@ interface BulkGeneratorProps {
   setSpeed: (s: number) => void;
   bulkText: string;
   setBulkText: (t: string) => void;
-  
 }
 
 interface BulkLine {
@@ -73,7 +70,6 @@ interface BulkLine {
 }
 
 function parseLines(raw: string): string[] {
-  // Split by double newlines (empty line separator)
   return raw
     .split(/\n\s*\n/)
     .map((s) => s.trim())
@@ -85,30 +81,19 @@ async function parseFile(file: File): Promise<string[]> {
 
   if (ext === "txt") {
     const text = await file.text();
-    // Split by single newlines so each line in the file becomes a voiceline
-    return text
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    return text.split("\n").map((s) => s.trim()).filter(Boolean);
   }
 
   if (ext === "csv") {
     const text = await file.text();
-    // Each non-empty row is a line
-    return text
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    return text.split("\n").map((s) => s.trim()).filter(Boolean);
   }
 
   if (ext === "docx") {
     const mammoth = await import("mammoth");
     const arrayBuffer = await file.arrayBuffer();
     const result = await mammoth.default.extractRawText({ arrayBuffer });
-    return result.value
-      .split("\n")
-      .map((s) => s.trim())
-      .filter(Boolean);
+    return result.value.split("\n").map((s) => s.trim()).filter(Boolean);
   }
 
   throw new Error(`Filtype .${ext} understøttes ikke. Brug .txt, .csv eller .docx.`);
@@ -131,7 +116,6 @@ const BulkGenerator = ({
   setSpeed,
   bulkText,
   setBulkText,
-  
 }: BulkGeneratorProps) => {
   const { toast } = useToast();
   const [lines, setLines] = useState<BulkLine[]>([]);
@@ -179,7 +163,6 @@ const BulkGenerator = ({
       const msg = err instanceof Error ? err.message : "Kunne ikke læse filen.";
       toast({ title: "Fejl", description: msg, variant: "destructive" });
     }
-    // Reset input
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -237,6 +220,31 @@ const BulkGenerator = ({
   const handleGenerateSingle = async (lineId: string) => {
     const line = lines.find((l) => l.id === lineId);
     if (!line) return;
+
+    // Pre-validate content for safety
+    try {
+      const validation = await validateContent(line.text.trim());
+      if (!validation.is_safe) {
+        setLines((prev) =>
+          prev.map((l) =>
+            l.id === lineId
+              ? { ...l, status: "error" as const, progress: 0, error: `Indhold ikke godkendt: ${validation.reason}` }
+              : l
+          )
+        );
+        return;
+      }
+    } catch (err) {
+      setLines((prev) =>
+        prev.map((l) =>
+          l.id === lineId
+            ? { ...l, status: "error" as const, progress: 0, error: "Kunne ikke validere indholdet" }
+            : l
+        )
+      );
+      return;
+    }
+
     setLines((prev) =>
       prev.map((l) => (l.id === lineId ? { ...l, status: "generating" as const, progress: 10 } : l))
     );
@@ -260,12 +268,13 @@ const BulkGenerator = ({
             : l
         )
       );
-    } catch {
+    } catch (err) {
       clearInterval(interval);
+      const message = err instanceof Error ? err.message : "Generering fejlede";
       setLines((prev) =>
         prev.map((l) =>
           l.id === lineId
-            ? { ...l, status: "error" as const, progress: 0, error: "Generering fejlede" }
+            ? { ...l, status: "error" as const, progress: 0, error: message }
             : l
         )
       );
@@ -310,11 +319,34 @@ const BulkGenerator = ({
     setIsProcessing(true);
 
     for (const line of toGenerate) {
+      // Pre-validate content for safety
+      try {
+        const validation = await validateContent(line.text.trim());
+        if (!validation.is_safe) {
+          setLines((prev) =>
+            prev.map((l) =>
+              l.id === line.id
+                ? { ...l, status: "error" as const, progress: 0, error: `Indhold ikke godkendt: ${validation.reason}` }
+                : l
+            )
+          );
+          continue;
+        }
+      } catch (err) {
+        setLines((prev) =>
+          prev.map((l) =>
+            l.id === line.id
+              ? { ...l, status: "error" as const, progress: 0, error: "Kunne ikke validere indholdet" }
+              : l
+          )
+        );
+        continue;
+      }
+
       setLines((prev) =>
         prev.map((l) => (l.id === line.id ? { ...l, status: "generating" as const, progress: 10 } : l))
       );
 
-      // Simulate progress
       const interval = setInterval(() => {
         setLines((prev) =>
           prev.map((l) =>
@@ -336,12 +368,13 @@ const BulkGenerator = ({
               : l
           )
         );
-      } catch {
+      } catch (err) {
         clearInterval(interval);
+        const message = err instanceof Error ? err.message : "Generering fejlede";
         setLines((prev) =>
           prev.map((l) =>
             l.id === line.id
-              ? { ...l, status: "error" as const, progress: 0, error: "Generering fejlede" }
+              ? { ...l, status: "error" as const, progress: 0, error: message }
               : l
           )
         );
@@ -459,7 +492,6 @@ const BulkGenerator = ({
         </div>
       </div>
 
-
       {/* Queue */}
       {lines.length > 0 && (
         <div className="space-y-4">
@@ -476,8 +508,6 @@ const BulkGenerator = ({
 
           {/* Bulk actions */}
           <div className="flex flex-wrap gap-3">
-
-
             <button
               onClick={handleOptimizeAll}
               disabled={optimizingAll || isProcessing || lines.filter((l) => l.status === "pending" || l.status === "done").length === 0}
@@ -497,10 +527,7 @@ const BulkGenerator = ({
             </Button>
           </div>
 
-          {/* Optimize all progress */}
-          {optimizingAll && (
-            <Progress value={optimizeAllProgress} className="h-2" />
-          )}
+          {optimizingAll && <Progress value={optimizeAllProgress} className="h-2" />}
 
           {/* Line items */}
           <div className="space-y-3">
@@ -517,20 +544,13 @@ const BulkGenerator = ({
                           className="text-sm min-h-[60px]"
                           autoFocus
                           onKeyDown={(e) => {
-                            if (e.key === "Enter" && !e.shiftKey) {
-                              e.preventDefault();
-                              saveEdit(line.id);
-                            }
-                            if (e.key === "Escape") {
-                              setEditingId(null);
-                              setEditText("");
-                            }
+                            if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); saveEdit(line.id); }
+                            if (e.key === "Escape") { setEditingId(null); setEditText(""); }
                           }}
                         />
                         <div className="flex gap-1">
                           <Button variant="outline" size="sm" onClick={() => saveEdit(line.id)}>
-                            <Check className="mr-1 h-3 w-3" />
-                            Gem
+                            <Check className="mr-1 h-3 w-3" /> Gem
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => { setEditingId(null); setEditText(""); }}>
                             Annuller
@@ -547,40 +567,29 @@ const BulkGenerator = ({
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     )}
-                    {line.status === "done" && (
-                      <span className="text-xs font-medium text-green-600 dark:text-green-400 mr-1">✓</span>
-                    )}
-                    {line.status === "error" && (
-                      <span className="text-xs font-medium text-destructive mr-1">✗</span>
-                    )}
+                    {line.status === "done" && <span className="text-xs font-medium text-green-600 dark:text-green-400 mr-1">✓</span>}
+                    {line.status === "error" && <span className="text-xs font-medium text-destructive mr-1">✗</span>}
                     <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => removeLine(line.id)}>
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
 
-                {/* Per-line actions */}
                 {editingId !== line.id && (line.status === "pending" || line.status === "done" || line.status === "error") && (
                   <div className="flex flex-wrap gap-2">
                     <button
                       onClick={() => handleOptimizeSingle(line.id)}
                       className="inline-flex items-center gap-1.5 rounded-md bg-gradient-to-r from-violet-500 to-purple-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-all hover:from-violet-600 hover:to-purple-700"
                     >
-                      <Sparkles className="h-3 w-3" />
-                      AI Optimer
+                      <Sparkles className="h-3 w-3" /> AI Optimer
                     </button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleGenerateSingle(line.id)}
-                    >
+                    <Button variant="outline" size="sm" onClick={() => handleGenerateSingle(line.id)}>
                       <Volume2 className="mr-1 h-3 w-3" />
                       {line.status === "done" ? "Re-generer" : "Generer"}
                     </Button>
                   </div>
                 )}
 
-                {/* Progress */}
                 {(line.status === "generating" || line.status === "optimizing") && (
                   <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">
@@ -590,14 +599,12 @@ const BulkGenerator = ({
                   </div>
                 )}
 
-                {/* Audio */}
                 {line.status === "done" && line.audioUrl && (
                   <div className="space-y-2">
                     <audio controls src={line.audioUrl} className="w-full h-10" />
                     <div className="flex items-center gap-0">
                       <Button variant="outline" size="sm" className="rounded-r-none" onClick={() => handleDownloadSingle(line)}>
-                        <Download className="mr-2 h-3.5 w-3.5" />
-                        Download .{downloadFormat}
+                        <Download className="mr-2 h-3.5 w-3.5" /> Download .{downloadFormat}
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -617,20 +624,16 @@ const BulkGenerator = ({
                   </div>
                 )}
 
-                {line.status === "error" && (
-                  <p className="text-xs text-destructive">{line.error}</p>
-                )}
+                {line.status === "error" && <p className="text-xs text-destructive">{line.error}</p>}
               </div>
             ))}
           </div>
 
-          {/* Bulk download */}
           {doneCount > 0 && (
             <div className="flex flex-wrap items-center gap-3 pt-2">
               <div className="flex items-center gap-0">
                 <Button size="lg" onClick={handleDownloadZip} className="rounded-r-none">
-                  <Package className="mr-2 h-4 w-4" />
-                  Download alle som .zip
+                  <Package className="mr-2 h-4 w-4" /> Download alle som .zip
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -652,10 +655,6 @@ const BulkGenerator = ({
           )}
         </div>
       )}
-
-      {/* Empty state when no lines added */}
-
-
     </div>
   );
 };
