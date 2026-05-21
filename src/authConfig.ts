@@ -11,7 +11,6 @@ function getClientId(): string {
   return (window.VITE_CLIENT_ID || import.meta.env.VITE_CLIENT_ID || "") as string;
 }
 
-
 function getTenantId(): string {
   return (window.VITE_TENANT_ID || import.meta.env.VITE_TENANT_ID || "") as string;
 }
@@ -29,12 +28,11 @@ function createMsalInstance() {
     );
   }
 
-  
   const config: Configuration = {
     auth: {
       clientId,
       authority: `https://login.microsoftonline.com/${tenantId}`,
-      redirectUri: window.location.origin,
+      redirectUri: window.location.origin + "/callback",
     },
     cache: {
       cacheLocation: "sessionStorage",

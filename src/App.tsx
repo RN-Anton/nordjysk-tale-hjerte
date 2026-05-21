@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Landing from "./pages/Landing";
+import Callback from "./pages/Callback";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,6 +19,7 @@ const App = () => {
         <Sonner />
         <BrowserRouter>
           <Routes>
+            <Route path="/callback" element={<Callback />} />
             <Route path="/login" element={<Landing />} />
             <Route path="/" element={<Index />} />
             <Route path="/admin" element={<Admin />} />
