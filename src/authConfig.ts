@@ -29,6 +29,7 @@ function createMsalInstance() {
     );
   }
 
+  
   const config: Configuration = {
     auth: {
       clientId,
