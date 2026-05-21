@@ -1,4 +1,4 @@
-import { PublicClientApplication, Configuration } from "@azure/msal-browser";
+import { PublicClientApplication, Configuration, RedirectRequest } from "@azure/msal-browser";
 
 declare global {
   interface Window {
@@ -45,10 +45,11 @@ function createMsalInstance() {
 
 export const msalInstance = createMsalInstance();
 
-export function getLoginRequest() {
+export function getLoginRequest(): RedirectRequest {
   const clientId = getClientId();
   return {
     scopes: [`${clientId}/.default`],
+    prompt: "select_account",
   };
 }
 
