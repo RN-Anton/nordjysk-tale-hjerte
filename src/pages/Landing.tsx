@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import rnLogo from "@/assets/rn-logo.png";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -9,6 +9,7 @@ import { useAuth } from "@/useAuth";
 const Landing = () => {
   const navigate = useNavigate();
   const { login, isLoggedIn, restoreSession, loading } = useAuth();
+  const loginAttempted = useRef(false);
 
   useEffect(() => {
     restoreSession().then((data) => {
@@ -19,6 +20,9 @@ const Landing = () => {
   }, [restoreSession, navigate]);
 
   const handleLogin = () => {
+    // Prevent double-clicking / multiple login attempts
+    if (loginAttempted.current) return;
+    loginAttempted.current = true;
     login();
   };
 
