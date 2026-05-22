@@ -2,8 +2,9 @@
 // Default to "/call" to match the backend's root_path configuration
 export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "/call") as string;
 
-// Hardcoded for testing purposes - remove this when environment variables work correctly
-export const API_KEY = "f6547e66932def6df5722ea96447de18f3d996cf0b7721c8c735a4fd64a61233" as string;
+// API Key - MUST match the TTS_API_KEY environment variable in the backend
+// Current production value: sk-KrvrVcK6D_VFzDtmyS7yqg
+export const API_KEY = "sk-KrvrVcK6D_VFzDtmyS7yqg" as string;
 
 // Auth endpoints are part of the same backend service (use the same base URL)
 export const AUTH_BASE_URL = API_BASE_URL;
