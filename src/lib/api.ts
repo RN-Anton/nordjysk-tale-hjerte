@@ -137,6 +137,7 @@ export async function queryLlm(userQuery: string): Promise<string> {
   return data.response ?? "";
 }
 
+
 export async function validateContent(text: string): Promise<ValidationResult> {
   const res = await fetch(`${BASE_URL}/api/v1/llm/validate`, {
     method: "POST",
