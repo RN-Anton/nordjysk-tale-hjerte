@@ -11,7 +11,9 @@ function validateConfig() {
 
 const headers = () => {
   validateConfig();
-  return { "X-API-Key": API_KEY };
+  const h = { "X-API-Key": API_KEY };
+  console.log("[TTS] Headers being sent:", JSON.stringify(h)); // Debug log
+  return h;
 };
 
 export interface Voice {
