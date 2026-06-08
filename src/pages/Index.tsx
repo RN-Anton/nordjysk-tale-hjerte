@@ -11,7 +11,7 @@ import { useAuth } from "@/useAuth";
 import SingleGenerator from "@/components/SingleGenerator";
 import BulkGenerator from "@/components/BulkGenerator";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Volume2, Settings, Loader2 } from "lucide-react";
+import { Volume2, Settings, Loader2, Mic } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -124,6 +124,15 @@ const Index = () => {
               Region Nordjylland
             </p>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-primary-foreground hover:text-primary-foreground/80"
+            onClick={() => navigate("/voices")}
+            title="Voice Management"
+          >
+            <Mic className="h-5 w-5" />
+          </Button>
           {isAdmin && (
             <Button variant="ghost" size="icon" className="text-primary-foreground hover:text-primary-foreground/80" onClick={() => navigate("/admin")} title="Admin">
               <Settings className="h-5 w-5" />

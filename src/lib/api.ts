@@ -2,6 +2,7 @@ import { API_BASE_URL, API_KEY } from "../config/config";
 
 const BASE_URL = API_BASE_URL;
 const TTS_PREFIX = "/api/v1/tts";
+const VOICES_PREFIX = "/api/v1/voices";
 
 function validateConfig() {
   if (!API_KEY) {
@@ -9,9 +10,12 @@ function validateConfig() {
   }
 }
 
-const headers = () => {
+const headers = (userEmail?: string) => {
   validateConfig();
-  const h = { "X-API-Key": API_KEY };
+  const h: Record<string, string> = { "X-API-Key": API_KEY };
+  if (userEmail) {
+    h["X-User-Email"] = userEmail;
+  }
   console.log("[TTS] Headers being sent:", JSON.stringify(h)); // Debug log
   return h;
 };
@@ -115,13 +119,13 @@ export async function generateSpeech(
     headers: { ...headers(), "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  
+
   // Handle 400 Bad Request for content safety
   if (res.status === 400) {
     const errorData = await res.json();
     throw new Error(errorData.detail ?? "Indholdet overtræder sikkerhedsreglerne.");
   }
-  
+
   if (!res.ok) throw new Error("Kunne ikke generere lydfil");
   return res.blob();
 }
@@ -203,4 +207,76 @@ export async function setVoiceAccessGroup(token: string, groupId: string): Promi
     body: JSON.stringify({ group_id: groupId }),
   });
   if (!res.ok) throw new Error("Kunne ikke opdatere stemmeadgang");
+}
+
+// ---- Voice Management System endpoints ----
+
+export interface VoiceManagementItem {
+  id: string;
+  voice_data_path: string;
+  owner_email: string;
+  permissions: string[];
+}
+
+export interface CreateVoiceRequest {
+  voice_data_path: string;
+  permissions: string[];
+}
+
+export interface UpdateVoiceRequest {
+  voice_data_path?: string;
+  permissions?: string[];
+}
+
+export async function fetchVoicesManagement(userEmail: string): Promise<VoiceManagementItem[]> {
+  const res = await fetch(`${BASE_URL}${VOICES_PREFIX}`, {
+    headers: { ...headers(userEmail) },
+  });
+  if (!res.ok) throw new Error(`Kunne ikke hente stemmer (HTTP ${res.status})`);
+  const data = await res.json();
+  return data.voices ?? data;
+}
+
+export async function createVoice(userEmail: string, data: CreateVoiceRequest): Promise<VoiceManagementItem> {
+  const res = await fetch(`${BASE_URL}${VOICES_PREFIX}`, {
+    method: "POST",
+    headers: { ...headers(userEmail), "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail ?? `Kunne ikke oprette stemme (HTTP ${res.status})`);
+  }
+  return res.json();
+}
+
+export async function updateVoice(
+  userEmail: string,
+  id: string,
+  data: UpdateVoiceRequest
+): Promise<VoiceManagementItem> {
+  const res = await fetch(`${BASE_URL}${VOICES_PREFIX}/${id}`, {
+    method: "PUT",
+    headers: { ...headers(userEmail), "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.detail ?? `Kunne ikke opdatere stemme (HTTP ${res.status})`);
+  }
+  return res.json();
+}
+
+export async function deleteVoice(userEmail: string, id: string): Promise<void> {
+  const res = await fetch(`${BASE_URL}${VOICES_PREFIX}/${id}`, {
+    method: "DELETE",
+    headers: { ...headers(userEmail) },
+  });
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    if (res.status === 403) {
+      throw new Error("Kun ejeren kan slette denne stemme.");
+    }
+    throw new Error(errorData.detail ?? `Kunne ikke slette stemme (HTTP ${res.status})`);
+  }
 }

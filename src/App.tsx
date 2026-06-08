@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
+import Voices from "./pages/Voices";
 import Landing from "./pages/Landing";
 import Callback from "./pages/Callback";
 import NotFound from "./pages/NotFound";
@@ -22,6 +23,7 @@ const App = () => {
             <Route path="/callback" element={<Callback />} />
             <Route path="/login" element={<Landing />} />
             <Route path="/" element={<Index />} />
+            <Route path="/voices" element={<Voices />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
